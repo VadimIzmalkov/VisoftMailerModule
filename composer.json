@@ -1,0 +1,29 @@
+{
+    "name": "vadimizmalkov/visoft-mailer-module",
+    "description": "ZF2 module for mailing purpose",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vadim Izmalkov",
+            "email": "399115@gmail.com"
+        }
+    ],
+    "keywords" : [
+        "zf2"
+    ],
+    "homepage" : "https://github.com/VadimIzmalkov/VisoftBaseModule",
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.3.3",
+        "zendframework/zendframework": ">=2.3",
+        "vadimizmalkov/visoft-base-module" : "dev-master"
+    },
+    "autoload" : {
+        "psr-0" : {
+            "VisoftMailerModule" : "src"
+        },
+        "classmap" : [
+            "./Module.php"
+        ]
+    }
+}
