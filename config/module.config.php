@@ -8,7 +8,7 @@ return [
             'routes' => [
                 'persist-contacts' => [
                     'options' => [
-                        'route' => 'persist contacts <statusid>',
+                        'route' => 'persist-contacts <statusid>',
                         'defaults' => [
                             '__NAMESPACE__' => 'VisoftMailerModule\Controller',
                             'controller'    => 'contact',
