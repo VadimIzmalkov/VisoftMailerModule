@@ -30,13 +30,14 @@ class Module
     {
         return [
             'factories' => [
-                'VisoftMailerModule\Options\ModuleOptions' => function($serviceManager) {
-                    return new Options\ModuleOptions();
+                'VisoftMailerModule\Options\ModuleOptions' => function($serviceLocator) {
+                    $config = $serviceLocator->get('Config');
+                    return new Options\ModuleOptions(isset($config['visoftmailermodule']) ? $config['visoftmailermodule'] : []);
                 },
-                'VisoftMailerModule\Service\ContactService' => function($serviceManager) {
-                    $moduleOptions = $serviceManager->get('VisoftMailerModule\Options\ModuleOptions');
-                    $authenticationService = $serviceManager->get('Zend\Authentication\AuthenticationService');
-                    $entityManager = $serviceManager->get('Doctrine\ORM\EntityManager');
+                'VisoftMailerModule\Service\ContactService' => function($serviceLocator) {
+                    $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
+                    $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
+                    $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
                     return new Service\ContactService($entityManager, $moduleOptions, $authenticationService);
                 },
             ],

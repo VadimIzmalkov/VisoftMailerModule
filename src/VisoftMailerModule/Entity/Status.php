@@ -14,7 +14,8 @@ use VisoftMailerModule\Entity\UserInterface;
  * @ORM\DiscriminatorColumn(name="discr", type="string")
  * @ORM\DiscriminatorMap( {
  *  "status" = "Status",
- *  "enter_contacts" = "StatusEnterContacts",
+ *  "status_contact_enter" = "StatusContactEnter",
+ *  "status_contact_export" = "StatusContactExport",
  * } )
  */
 class Status
@@ -66,7 +67,7 @@ class Status
     /**
      * @var UserInterface
      * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\UserInterface")
-     * @ORM\JoinColumn(name="created_by_id", referencedColumnName="usr_id", nullable=true,  unique=false)
+     * @ORM\JoinColumn(name="created_by_id", referencedColumnName="id", nullable=true,  unique=false)
      */
     protected $createdBy;
 

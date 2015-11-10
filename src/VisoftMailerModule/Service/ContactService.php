@@ -18,35 +18,31 @@ class ContactService implements ContactServiceInterface
 		$this->entityManager = $entityManager;
 		$this->moduleOptions = $moduleOptions;
 		$this->authenticationService = $authenticationService;
-		$this->checkDir($this->moduleOptions->getLogExportFilesDir());
-	}
-
-	protected function createStatusEnterContacts($emails)
-	{
-		$authenticatedUser = $this->authenticationService->getIdentity();
-		$status = new Entity\StatusEnterContacts($authenticatedUser, $emails);
-		$status->setState(0);
-		$now = new \DateTime();
-		$status->setLogFilePath($this->moduleOptions->getLogExportFilesDir() . 'import-contacts_' . $now->format('d-m-Y_H-i-s') . '.log');
-		$this->entityManager->persist($status);
-		$this->entityManager->flush();
-		return $status;
+		$this->checkDir($this->moduleOptions->getContactEnterLogDir());
+        $this->checkDir($this->moduleOptions->getContactExportLogDir());
 	}
 
 	public function enter($emails)
 	{
-		// create new status
-		$status = $this->createStatusEnterContacts($emails);
+		// create status entity
+        $now = new \DateTime();
+        $authenticatedUser = $this->authenticationService->getIdentity();
+        $status = new Entity\StatusContactEnter($authenticatedUser, $emails);
+        $status->setState(0);
+        $status->setLogFilePath($this->moduleOptions->getContactEnterLogDir() . 'import-contacts_' . $now->format('d-m-Y_H-i-s') . '.log');
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
     	$statusId = $status->getId();
-    	// $logFilePath = $status->getLogFilePath();
-    	$nowTime = new \DateTime();
-    	$logWorkerFilePath = $this->moduleOptions->getLogExportFilesDir() . 'worker_' . $nowTime->format("Y-m-d_H-i-s") . '.log';
-    	$errWorkerFilePath = $this->moduleOptions->getLogExportFilesDir() . 'worker_' . $nowTime->format("Y-m-d_H-i-s") . '.err';
-        $shell = 'php public/index.php persist contacts '. $statusId . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
+    	$logWorkerFilePath = $this->moduleOptions->getContactEnterLogDir() 
+            . 'worker_' . $now->format("Y-m-d_H-i-s") . '.log';
+    	$errWorkerFilePath = $this->moduleOptions->getContactEnterLogDir() 
+            . 'worker_' . $now->format("Y-m-d_H-i-s") . '.err';
+        $shell = 'php public/index.php contact-persist '. $statusId 
+            . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
         shell_exec($shell);
 	}
 
-	public function persist($statusId)
+	private function persist($statusId)
 	{
 		// update status - persist started
        	$status = $this->entityManager->getRepository('VisoftMailerModule\Entity\Status')->findOneBy(['id' => $statusId]);
@@ -146,6 +142,25 @@ class ContactService implements ContactServiceInterface
         $this->entityManager->persist($contact);
     }
 
+    public function export(Entity\ContactListInterface $contactList)
+    {
+        $now = new \DateTime();
+        $authenticatedUser = $this->authenticationService->getIdentity();
+        $status = new Entity\StatusContactExport($authenticatedUser);
+        $status->setState(0);
+        $status->setContactList($contactList);
+        $status->setLogFilePath($this->moduleOptions->getContactExportLogDir() . 'export-contacts_' . $now->format('d-m-Y_H-i-s') . '.log');
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
+        $statusId = $status->getId();
+        $nowTime = new \DateTime();
+        $logWorkerFilePath = $this->moduleOptions->getContactExportLogDir() . 'worker_' . $nowTime->format("Y-m-d_H-i-s") . '.log';
+        $errWorkerFilePath = $this->moduleOptions->getContactExportLogDir() . 'worker_' . $nowTime->format("Y-m-d_H-i-s") . '.err';
+        $shell = 'php public/index.php contact-extract '. $statusId . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
+        // shell_exec($shell);
+        return $status->getId();
+    }
+
     protected function checkDir($path)
     {
         if (!is_dir($path)) {
@@ -162,6 +177,5 @@ class ContactService implements ContactServiceInterface
     	$time = microtime(true);
 		$micro = sprintf("%06d",($time - floor($time)) * 1000000);
 		return new \DateTime(date('Y-m-d H:i:s.' . $micro, $time));
-       	// $message = "[" . $nowTime->format('d/m/Y H:i:s.u') . "] Connected to worker. \n";
     }
 }

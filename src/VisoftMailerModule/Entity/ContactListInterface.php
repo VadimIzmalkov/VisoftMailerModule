@@ -2,7 +2,7 @@
 
 namespace VisoftMailerModule\Entity;
 
-interface UserInterface
+interface ContactListInterface
 {
 	
 }

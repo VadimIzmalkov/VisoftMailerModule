@@ -10,7 +10,7 @@ use VisoftMailerModule\Entity\UserInterface;
 /**
  * @ORM\Entity
  */
-class StatusEnterContacts extends Status
+class StatusContactEnter extends Status
 {	
     /**
      * @var text
