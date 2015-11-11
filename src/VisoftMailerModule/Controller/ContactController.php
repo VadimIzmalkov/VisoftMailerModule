@@ -2,107 +2,79 @@
 
 namespace VisoftMailerModule\Controller;
 
-use Zend\Console\Request as ConsoleRequest;
+use Zend\Console\Request as ConsoleRequest,
+    Zend\View\Model\JsonModel;
 
-use VisoftBaseModule\Controller\BaseController;
+use Doctrine\ORM\EntityManager;
 
-use VisoftMailerModule\Service\ContactServiceInterface,
-	VisoftMailerModule\Options\ModuleOptions;
+use VisoftBaseModule\Controller\BaseController,
+    VisoftBaseModule\Service\ProcessingService,
+    VisoftMailerModule\Options\ModuleOptions,
+    VisoftMailerModule\Service\ContactServiceInterface;
 
 class ContactController extends BaseController
 {
+    protected $entityManager;
 	protected $contactService;
 	protected $moduleOptions;
+    protected $processingService;
 
-	public function __construct(ContactServiceInterface $contactService, ModuleOptions $moduleOptions)
+	public function __construct(
+        EntityManager $entityManager,
+        ContactServiceInterface $contactService, 
+        ModuleOptions $moduleOptions, 
+        ProcessingService $processingService
+    )
 	{
+        $this->entityManager = $entityManager;
 		$this->moduleOptions = $moduleOptions;
 		$this->contactService = $contactService;
+        $this->processingService = $processingService;
 	}
 
-	public function persistContactsAction()
+	public function contactsEnterAction()
 	{
         $request = $this->getRequest();
         if (!$request instanceof ConsoleRequest)
-            throw new \RuntimeException('You can only use parseAction() from a console!');
+            throw new \RuntimeException('You can only use from a console');
         $statusId = $request->getParam('statusid', false);
-        
-        // Set Gearman client
-        $client = new \GearmanClient();
-        $client->addServer('127.0.0.1', 4730); // by default host/port will be "localhost" & 4730
-        $result = $client->doBackground("persistContacts", $statusId); // Send job
-
-        // Check if worker launched
-        $status = $this->getGearmanStatus();
-        foreach ($status['connections'] as $key => $connection) {
-            if($connection['function'] === 'persistContacts') {
-                echo "I found a worker. Waiting in background... \n";
-                die("Adios hommie");
-            }
-        }
-
-        // Set Gearman worker
-        $worker = new \GearmanWorker();
-        $worker->addServer('127.0.0.1', 4730);
-        $worker->setTimeout(240000);
-        $worker->addFunction('persistContacts', function (\GearmanJob $job) {
-            $statusId = $job->workload();
-            $this->contactService->persist($statusId);
+        if(!$statusId)
+            throw new \RuntimeException('Status id not specified');
+        $process = $this->processingService->createBackgroundProcess("contactsEnter", $statusId);
+        $process->getWorker()->addFunction('contactsEnter', function (\GearmanJob $job) {
+            $this->contactService->persist($job->workload());
             return true;
         });
-
-        // Infinit loop
-        while(true) {
-            echo "Witing a job... \n";
-            $worker->work();
-            if ($worker->returnCode() != GEARMAN_SUCCESS) {
-                echo "return_code: " . $worker->returnCode() . "\n";
-                break;
-            }
-        }
+        $process->run();
 	}
 
-	// TODO: put it out from there
-    public function getGearmanStatus(){
-        $status = null;
-        // $handle = fsockopen($this->host,$this->port,$errorNumber,$errorString,30);
-        $handle = fsockopen('127.0.0.1', 4730, $errorNumber, $errorString, 30);
-        if($handle!=null){
-            fwrite($handle,"status\n");
-            while (!feof($handle)) {
-                $line = fgets($handle, 4096);
-                if( $line == ".\n") {
-                    break;
-                }
-                if( preg_match("~^(.*)[ \t](\d+)[ \t](\d+)[ \t](\d+)~", $line, $matches) ) {
-                    $function = $matches[1];
-                    $status['operations'][$function] = array(
-                        'function' => $function,
-                        'total' => $matches[2],
-                        'running' => $matches[3],
-                        'connectedWorkers' => $matches[4],
-                    );
-                }
-            }
-            fwrite($handle,"workers\n");
-            while (!feof($handle)) {
-                $line = fgets($handle, 4096);
-                if( $line==".\n"){
-                    break;
-                }
-                // FD IP-ADDRESS CLIENT-ID : FUNCTION
-                if( preg_match("~^(\d+)[ \t](.*?)[ \t](.*?) : ?(.*)~",$line,$matches) ){
-                    $fd = $matches[1];
-                    $status['connections'][$fd] = array(
-                        'fd' => $fd,
-                        'ip' => $matches[2],
-                        'id' => $matches[3],
-                        'function' => $matches[4],
-                    );
-                }
-            }
-            fclose($handle);
-        }
-        return $status;
+    public function contactsExportAction()
+    {
+        $request = $this->getRequest();
+        if (!$request instanceof ConsoleRequest)
+            throw new \RuntimeException('You can only use from a console');
+        $statusId = $request->getParam('statusid', false);
+        if(!$statusId)
+            throw new \RuntimeException('Status id not specified');
+        $process = $this->processingService->createBackgroundProcess("contactsExport", $statusId);
+        $process->getWorker()->addFunction('contactsExport', function (\GearmanJob $job) {
+            $this->contactService->extract($job->workload());
+            return true;
+        });
+        $process->run();
+    }
+
+    public function updateStateStatusExportAjaxAction()
+    {
+        $request = $this->getRequest();
+        // if ($request->isXmlHttpRequest()) {
+            $statusId = $this->params()->fromRoute('entityId');
+            $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\Status')->findOneBy(['id' => $statusId]);
+            if($status->getState() === 2)
+                return new JsonModel(['code' => true]);
+            else
+                return new JsonModel(['code' => false]);
+        // }
+        return $this->notFoundAction();
     }
 }

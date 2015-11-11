@@ -35,16 +35,16 @@ class Status
     protected $token;
 
     /**
-     * @var integer 0-created | 1-pushed | 2-in progress | 3-finished | 4-error 
+     * @var integer 0-created | 1-pending | 2-in progress | 3-finished | 4-error 
      * @ORM\Column(name="state", type="integer", nullable=true)
      */
     protected $state;
 
     /**
      * @var string
-     * @ORM\Column(name="log_file_path", type="string", nullable=true)
+     * @ORM\Column(name="log_file", type="string", nullable=true)
      */
-    protected $logFilePath;
+    protected $logFile;
 
     /**
      * @var \DateTime
@@ -88,9 +88,9 @@ class Status
     	return $this;
     }
 
-    public function getLogFilePath() { return $this->logFilePath; }
-    public function setLogFilePath($logFilePath) {
-    	$this->logFilePath = $logFilePath;
+    public function getLogFile() { return $this->logFile; }
+    public function setLogFile($logFile) {
+    	$this->logFile = $logFile;
     	return $this;
     }
 

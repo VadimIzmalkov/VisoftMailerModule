@@ -6,25 +6,33 @@ use Zend\Stdlib\AbstractOptions;
 
 class ModuleOptions extends AbstractOptions
 {
-    protected $contactEnterLogDir;
-    protected $contactExportLogDir;
+	protected $contactDir;
+    protected $contactLogDir;
+    protected $contactExportedCsvDir;
 
     public function __construct($options)
     {
-    	$this->contactEnterLogDir = getcwd() . '/data/VisoftMailerModule/log/contact/enter/';
-    	$this->contactExportLogDir = getcwd() . '/data/VisoftMailerModule/log/contact/export/';
+    	$this->contactDir = getcwd() . '/data/VisoftMailerModule/contact';
+    	$this->contactLogDir = $this->contactDir . '/log';
+    	$this->contactExportedCsvDir = $this->contactDir . '/exported-csv';
     	parent::__construct($options);
     }
 
-    public function getContactEnterLogDir() { return $this->contactEnterLogDir; }
-    public function setContactEnterLogDir($contactEnterLogDir) { 
-    	$this->contactEnterLogDir = $contactEnterLogDir;
+    public function getContactDir() { return $this->contactDir; }
+    public function setContactDir($contactDir) { 
+    	$this->contactDir = $contactDir;
         return $this;
     }
 
-    public function getContactExportLogDir() { return $this->contactExportLogDir; }
-    public function setContactExportLogDir($contactExportLogDir) { 
-    	$this->contactExportLogDir = $contactExportLogDir;
+    public function getContactLogDir() { return $this->contactLogDir; }
+    public function setContactLogDir($contactLogDir) { 
+    	$this->contactLogDir = $contactLogDir;
+        return $this;
+    }
+
+    public function getContactExportedCsvDir() { return $this->contactExportedCsvDir; }
+    public function setContactExportedCsvDir($contactExportedCsvDir) { 
+    	$this->contactExportedCsvDir = $contactExportedCsvDir;
         return $this;
     }
 }

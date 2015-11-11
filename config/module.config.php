@@ -6,19 +6,42 @@ return [
     'console' => [
         'router' => [
             'routes' => [
-                'persist-contacts' => [
+                'contacts-enter' => [
                     'options' => [
-                        'route' => 'contacts-persist <statusid>',
+                        'route' => 'contacts-enter <statusid>',
                         'defaults' => [
                             '__NAMESPACE__' => 'VisoftMailerModule\Controller',
                             'controller'    => 'contact',
-                            'action'        => 'persist-contacts',
+                            'action'        => 'contacts-enter',
+                        ],
+                    ]
+                ],
+                'contacts-export' => [
+                    'options' => [
+                        'route' => 'contacts-export <statusid>',
+                        'defaults' => [
+                            '__NAMESPACE__' => 'VisoftMailerModule\Controller',
+                            'controller'    => 'contact',
+                            'action'        => 'contacts-export',
                         ],
                     ]
                 ],
             ],
         ],
     ],
+    // 'router' => [
+    //     'routes' => [
+    //         'visoft-mailer' => [
+    //             'type' => 'Segment',
+    //             'options' => [
+    //                 'route' => '/visoft-mailer/:controller/:action[/:entityId[/]]',
+    //                 'defaults' => [
+    //                     '__NAMESPACE__' => 'VisoftMailerModule\Controller',
+    //                 ],
+    //             ],
+    //         ],
+    //     ],
+    // ],
     'doctrine' => array(
         'driver' => array(
             __NAMESPACE__ . '_driver' => array(

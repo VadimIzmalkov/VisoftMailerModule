@@ -18,8 +18,8 @@ class ContactService implements ContactServiceInterface
 		$this->entityManager = $entityManager;
 		$this->moduleOptions = $moduleOptions;
 		$this->authenticationService = $authenticationService;
-		$this->checkDir($this->moduleOptions->getContactEnterLogDir());
-        $this->checkDir($this->moduleOptions->getContactExportLogDir());
+		$this->checkDir($this->moduleOptions->getContactLogDir());
+        $this->checkDir($this->moduleOptions->getContactExportedCsvDir());
 	}
 
 	public function enter($emails)
@@ -42,7 +42,7 @@ class ContactService implements ContactServiceInterface
         shell_exec($shell);
 	}
 
-	private function persist($statusId)
+	public function persist($statusId)
 	{
 		// update status - persist started
        	$status = $this->entityManager->getRepository('VisoftMailerModule\Entity\Status')->findOneBy(['id' => $statusId]);
@@ -149,16 +149,71 @@ class ContactService implements ContactServiceInterface
         $status = new Entity\StatusContactExport($authenticatedUser);
         $status->setState(0);
         $status->setContactList($contactList);
-        $status->setLogFilePath($this->moduleOptions->getContactExportLogDir() . 'export-contacts_' . $now->format('d-m-Y_H-i-s') . '.log');
+        // $status->setLogFile('export-contacts_' . $now->format('d-m-Y_H-i-s') . '.log');
+        $csvFileName = 'contacts_export_' . $now->format('d-m-Y_H-i-s') . '.csv';
+        $csvFilePath = $this->moduleOptions->getContactExportedCsvDir() . '/' . $csvFileName;
+        $status->setCsvFilePath($csvFilePath);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
         $statusId = $status->getId();
-        $nowTime = new \DateTime();
-        $logWorkerFilePath = $this->moduleOptions->getContactExportLogDir() . 'worker_' . $nowTime->format("Y-m-d_H-i-s") . '.log';
-        $errWorkerFilePath = $this->moduleOptions->getContactExportLogDir() . 'worker_' . $nowTime->format("Y-m-d_H-i-s") . '.err';
-        $shell = 'php public/index.php contact-extract '. $statusId . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
-        // shell_exec($shell);
-        return $status->getId();
+        
+        // command to run exporting in separated process
+        $logWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+            . '/worker_export_contacts_' . $now->format("Y-m-d_H-i-s") . '.log';
+        $errWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+            . '/worker_export_contacts_' . $now->format("Y-m-d_H-i-s") . '.err';
+        $shell = 'php public/index.php contacts-export ' 
+            . $statusId 
+            . ' >' . $logWorkerFilePath 
+            . ' 2>' . $errWorkerFilePath 
+            . ' &';
+        shell_exec($shell);
+        return $status;
+    }
+
+    public function extract($statusId)
+    {
+        $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusContactExport')->findOneBy(['id' => $statusId]);
+        $status->setStartedAt(new \Datetime());
+        $status->setState(1);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
+        $this->extractContacts($status);
+        $status->setFinishedAt(new \Datetime());
+        $status->setState(2);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
+    }
+
+    protected function extractContacts($status)
+    {
+        $contactLists = [];
+        $contactListId = $status->getContactList()->getId();
+        array_push($contactLists, (int)$contactListId);
+        $usersSubscribed = $this->entityManager->getRepository('Admin\Entity\User')->findByCitiesSubscribed($contactLists);
+        $csvFilePath = $status->getCsvFilePath();
+        $line = "Email, State \n";
+        foreach ($usersSubscribed as $user) {
+            // $line .= print_r($user, true);
+            $line .= $user['email'] . ', '. $user['state'] . "\n";
+        }
+        file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
+        $line = null;
+        $userUnsubscribed = $this->entityManager->getRepository('Admin\Entity\User')->findByCitiesUnsubscribed($contactLists);
+        foreach ($userUnsubscribed as $user) {
+            if(isset($user['state']))
+                $state = $user['state'];
+            else 
+                $state = 'Unknown';
+            $line .= $user['email'] . ', ' . $state . "\n";
+        }
+        file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
+        unset($line);
+    }
+
+    public function getOptions()
+    {
+        return $this->moduleOptions;
     }
 
     protected function checkDir($path)

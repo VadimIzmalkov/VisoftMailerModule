@@ -5,7 +5,8 @@ namespace VisoftMailerModule;
 use Zend\Mvc\Controller\ControllerManager;
 
 use VisoftMailerModule\Controller,
-    VisoftMailerModule\Service,
+    VisoftBaseModule\Service as BaseService,
+    VisoftMailerModule\Service as MailerService,
     VisoftMailerModule\Options;
 
 class Module
@@ -34,11 +35,15 @@ class Module
                     $config = $serviceLocator->get('Config');
                     return new Options\ModuleOptions(isset($config['visoftmailermodule']) ? $config['visoftmailermodule'] : []);
                 },
+                'VisoftBaseModule\Service\ProcessingService' => function($serviceLocator) {
+                    $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
+                    return new BaseService\ProcessingService($entityManager);
+                },
                 'VisoftMailerModule\Service\ContactService' => function($serviceLocator) {
                     $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
                     $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
                     $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
-                    return new Service\ContactService($entityManager, $moduleOptions, $authenticationService);
+                    return new MailerService\ContactService($entityManager, $moduleOptions, $authenticationService);
                 },
             ],
         ];
@@ -49,10 +54,12 @@ class Module
         return array(
             'factories' => array(
                 'VisoftMailerModule\Controller\Contact' => function(ControllerManager $controllerManager) {
-                    $serviceManager = $controllerManager->getServiceLocator();
-                    $moduleOptions = $serviceManager->get('VisoftMailerModule\Options\ModuleOptions');
-                    $contactService = $serviceManager->get('VisoftMailerModule\Service\ContactService');
-                    return new Controller\ContactController($contactService, $moduleOptions);
+                    $serviceLocator = $controllerManager->getServiceLocator();
+                    $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
+                    $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
+                    $contactService = $serviceLocator->get('VisoftMailerModule\Service\ContactService');
+                    $processingService = $serviceLocator->get('VisoftBaseModule\Service\ProcessingService');
+                    return new Controller\ContactController($entityManager, $contactService, $moduleOptions, $processingService);
                 },
             ),
         );
