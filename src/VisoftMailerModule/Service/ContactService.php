@@ -149,7 +149,6 @@ class ContactService implements ContactServiceInterface
         $status = new Entity\StatusContactExport($authenticatedUser);
         $status->setState(0);
         $status->setContactList($contactList);
-        // $status->setLogFile('export-contacts_' . $now->format('d-m-Y_H-i-s') . '.log');
         $csvFileName = 'contacts_export_' . $now->format('d-m-Y_H-i-s') . '.csv';
         $csvFilePath = $this->moduleOptions->getContactExportedCsvDir() . '/' . $csvFileName;
         $status->setCsvFilePath($csvFilePath);
