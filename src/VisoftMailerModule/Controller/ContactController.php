@@ -67,14 +67,14 @@ class ContactController extends BaseController
     public function updateStateStatusExportAjaxAction()
     {
         $request = $this->getRequest();
-        // if ($request->isXmlHttpRequest()) {
+        if ($request->isXmlHttpRequest()) {
             $statusId = $this->params()->fromRoute('entityId');
             $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\Status')->findOneBy(['id' => $statusId]);
             if($status->getState() === 2)
                 return new JsonModel(['code' => true]);
             else
                 return new JsonModel(['code' => false]);
-        // }
+        }
         return $this->notFoundAction();
     }
 }

@@ -12,7 +12,6 @@
         "zf2"
     ],
     "homepage" : "https://github.com/VadimIzmalkov/VisoftBaseModule",
-    "minimum-stability": "dev",
     "require": {
         "php": ">=5.3.3",
         "zendframework/zendframework": ">=2.3",
