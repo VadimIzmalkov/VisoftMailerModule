@@ -19,8 +19,8 @@ class StatusContactExport extends Status
     protected $csvFilePath;
 
     /**
-     * @var ContactInterface
-     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\ContactInterface")
+     * @var ContactListInterface
+     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\ContactListInterface")
      * @ORM\JoinColumn(name="contact_list", referencedColumnName="id", nullable=true,  unique=false)
      */
     protected $contactList;
