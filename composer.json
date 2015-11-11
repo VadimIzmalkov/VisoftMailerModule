@@ -2,6 +2,7 @@
     "name": "vadimizmalkov/visoft-mailer-module",
     "description": "ZF2 module for mailing purpose",
     "license": "MIT",
+    "minimum-stability": "dev",
     "authors": [
         {
             "name": "Vadim Izmalkov",
