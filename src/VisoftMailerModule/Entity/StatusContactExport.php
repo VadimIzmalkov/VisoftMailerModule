@@ -5,40 +5,26 @@ namespace VisoftMailerModule\Entity;
 use Doctrine\ORM\Mapping as ORM,
 	Doctrine\Common\Collections\ArrayCollection;
 
-use VisoftMailerModule\Entity\UserInterface;
-
 /**
  * @ORM\Entity
  */
 class StatusContactExport extends Status
-{	
-    /**
-     * @var string
-     * @ORM\Column(name="log_file_path", type="string", nullable=true)
-     */
-    protected $csvFilePath;
-
+{
     /**
      * @var ContactListInterface
-     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\ContactListInterface")
+     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\MailingListInterface")
      * @ORM\JoinColumn(name="contact_list", referencedColumnName="id", nullable=true,  unique=false)
      */
-    protected $contactList;
+    protected $mailingList;
 
     public function __construct(UserInterface $createdBy) {
     	parent::__construct($createdBy);
     }
 
-    public function getContactList() { return $this->contactList; }
-    public function setContactList($contactList) {
-    	$this->contactList = $contactList;
+    public function getMailingList() { return $this->mailingList; }
+    public function setMailingList($mailingList) {
+    	$this->mailingList = $mailingList;
     	return $this;
-    }
-
-    public function getCsvFilePath() { return $this->csvFilePath; }
-    public function setCsvFilePath($csvFilePath) {
-        $this->csvFilePath = $csvFilePath;
-        return $this;
     }
 }
 	

@@ -41,12 +41,6 @@ class Status
     protected $state;
 
     /**
-     * @var string
-     * @ORM\Column(name="log_file", type="string", nullable=true)
-     */
-    protected $logFile;
-
-    /**
      * @var \DateTime
      * @ORM\Column(name="created_at", type="datetime", nullable=true)
      */
@@ -71,6 +65,12 @@ class Status
      */
     protected $createdBy;
 
+    /**
+     * @var string
+     * @ORM\Column(name="output_file_path", type="string", nullable=true)
+     */
+    protected $outputFilePath;
+
     public function __construct(UserInterface $createdBy)
     {
     	$this->createdAt = new \DateTime();
@@ -88,10 +88,10 @@ class Status
     	return $this;
     }
 
-    public function getLogFile() { return $this->logFile; }
-    public function setLogFile($logFile) {
-    	$this->logFile = $logFile;
-    	return $this;
+    public function getOutputFilePath() { return $this->outputFilePath; }
+    public function setOutputFilePath($outputFilePath) {
+        $this->outputFilePath = $outputFilePath;
+        return $this;
     }
 
     public function getCreatedAt() { return $this->createdAt; }

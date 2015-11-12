@@ -2,7 +2,7 @@
 
 namespace VisoftMailerModule\Entity;
 
-interface ContactListInterface
+interface MailingListInterface
 {
 	public function getId();
 	public function getName();

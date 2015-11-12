@@ -19,27 +19,35 @@ class ContactService implements ContactServiceInterface
 		$this->moduleOptions = $moduleOptions;
 		$this->authenticationService = $authenticationService;
 		$this->checkDir($this->moduleOptions->getContactLogDir());
+        $this->checkDir($this->moduleOptions->getContactReportsDir());
         $this->checkDir($this->moduleOptions->getContactExportedCsvDir());
 	}
 
-	public function enter($emails)
+	public function enter($contactLists, $emails)
 	{
-		// create status entity
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
         $status = new Entity\StatusContactEnter($authenticatedUser, $emails);
         $status->setState(0);
-        $status->setLogFilePath($this->moduleOptions->getContactEnterLogDir() . 'import-contacts_' . $now->format('d-m-Y_H-i-s') . '.log');
+        $status->addContactLists($contactLists);
+        $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.text';
+        $reportFilePath = $this->moduleOptions->getContactReportsDir() . '/' . $reportFileName;
+        $status->setOutputFilePath($reportFilePath);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
-    	$statusId = $status->getId();
-    	$logWorkerFilePath = $this->moduleOptions->getContactEnterLogDir() 
-            . 'worker_' . $now->format("Y-m-d_H-i-s") . '.log';
-    	$errWorkerFilePath = $this->moduleOptions->getContactEnterLogDir() 
-            . 'worker_' . $now->format("Y-m-d_H-i-s") . '.err';
-        $shell = 'php public/index.php contact-persist '. $statusId 
-            . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
+        $statusId = $status->getId();
+        // command to run exporting in separated process
+        $logWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+            . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.log';
+        $errWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+            . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.err';
+        $shell = 'php public/index.php contacts-enter ' 
+            . $statusId 
+            . ' >' . $logWorkerFilePath 
+            . ' 2>' . $errWorkerFilePath 
+            . ' &';
         shell_exec($shell);
+        return $status;
 	}
 
 	public function persist($statusId)
@@ -50,15 +58,15 @@ class ContactService implements ContactServiceInterface
        		echo "status not exists";
        		return true;
        	}
-       	
+
        	// logging
-       	$logFile = $status->getLogFilePath();
+       	$reportFilePath = $status->getOutputFilePath();
        	$message = "====================  PERSIST CONTACTS REPORT  ====================\n";
        	$message .= "Status id: " . $statusId . "\n";
        	$message .= "Date: " . $this->getDateTimeWithMicroseconds()->format('d/m/Y') . "\n";
        	$message .= "------------------------------------------------------------------- \n";
        	$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Connected to worker. \n";
-       	file_put_contents($logFile, $message, FILE_APPEND | LOCK_EX);
+       	file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
        	
        	// update state status
         $status->setStartedAt(new \Datetime());
@@ -69,7 +77,7 @@ class ContactService implements ContactServiceInterface
         // logging
        	$message = "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Persisting started. \n";
        	$message .= "------------------------------------------------------------------- \n";
-       	file_put_contents($logFile, $message, FILE_APPEND | LOCK_EX);
+       	file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
 
        	// persist
         $emailsString = $status->getEmailsString();
@@ -88,12 +96,10 @@ class ContactService implements ContactServiceInterface
                     break;
                 } else {
                     $email = $emails[0][$countContacts];
-                    var_dump($email);
                 }
         	}
         	// check if contact already exist
-        	// TODO User Repository move to module config
-        	$contact = $this->entityManager->getRepository('Application\Entity\Lead')->findOneBy(['email' => $email]);
+        	$contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy(['email' => $email]);
         	$contactNotExist = empty($contact);
         	$emailProcessed = in_array(strtolower($email), array_map('strtolower', $emailsProcessed)); 
         	if($contactNotExist && !$emailProcessed) {
@@ -102,7 +108,7 @@ class ContactService implements ContactServiceInterface
         	} else {
         		$countContactExist++;
 				$message = "Warning: " . $email . " alredy exists and cannot be added \n";
-       			file_put_contents($logFile, $message, FILE_APPEND | LOCK_EX);
+       			file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
         	}
         	array_push($emailsProcessed, $email);
         	$countContacts++;
@@ -131,36 +137,35 @@ class ContactService implements ContactServiceInterface
 		$message .= "- contacts exist: " . $countContactExist . " \n";
 		$message .= "------------------------------------------------------------------- \n";
 		$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Persisting successfully completed. \n";
-   		file_put_contents($logFile, $message, FILE_APPEND | LOCK_EX);
+   		file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
 	}
 
     protected function persistContact($email)
     {
-        $contact = new \Application\Entity\Lead();
-        $contact->setEmail($email);
-        $contact->setState(6);
-        $this->entityManager->persist($contact);
+        // $contact = new \VisoftMailerModule\Entity\ContactInterface();
+        // $contact->setEmail($email);
+        // $contact->setState(6);
+        // $this->entityManager->persist($contact);
     }
 
-    public function export(Entity\ContactListInterface $contactList)
+    public function export(Entity\MailingListInterface $mailingList)
     {
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
         $status = new Entity\StatusContactExport($authenticatedUser);
         $status->setState(0);
-        $status->setContactList($contactList);
+        $status->setMailingList($mailingList);
         $csvFileName = 'contacts_export_' . $now->format('d-m-Y_H-i-s') . '.csv';
         $csvFilePath = $this->moduleOptions->getContactExportedCsvDir() . '/' . $csvFileName;
-        $status->setCsvFilePath($csvFilePath);
+        $status->setOutputFilePath($csvFilePath);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
         $statusId = $status->getId();
-        
         // command to run exporting in separated process
         $logWorkerFilePath = $this->moduleOptions->getContactLogDir() 
-            . '/worker_export_contacts_' . $now->format("Y-m-d_H-i-s") . '.log';
+            . '/worker_contacts_export_' . $now->format("Y-m-d_H-i-s") . '.log';
         $errWorkerFilePath = $this->moduleOptions->getContactLogDir() 
-            . '/worker_export_contacts_' . $now->format("Y-m-d_H-i-s") . '.err';
+            . '/worker_contacts_export_' . $now->format("Y-m-d_H-i-s") . '.err';
         $shell = 'php public/index.php contacts-export ' 
             . $statusId 
             . ' >' . $logWorkerFilePath 
@@ -186,25 +191,21 @@ class ContactService implements ContactServiceInterface
 
     protected function extractContacts($status)
     {
-        $contactLists = [];
-        $contactListId = $status->getContactList()->getId();
-        array_push($contactLists, (int)$contactListId);
-        $usersSubscribed = $this->entityManager->getRepository('Admin\Entity\User')->findByCitiesSubscribed($contactLists);
-        $csvFilePath = $status->getCsvFilePath();
+        $mailingListId = $status->getMailingList()->getId();
+        $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($mailingListId);
+        $csvFilePath = $status->getOutputFilePath();
         $line = "Email, State \n";
-        foreach ($usersSubscribed as $user) {
-            // $line .= print_r($user, true);
-            $line .= $user['email'] . ', '. $user['state'] . "\n";
-        }
+        foreach ($contactsSubscribed as $contact) 
+            $line .= $contact['email'] . ', '. $contact['state'] . "\n";
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         $line = null;
-        $userUnsubscribed = $this->entityManager->getRepository('Admin\Entity\User')->findByCitiesUnsubscribed($contactLists);
-        foreach ($userUnsubscribed as $user) {
-            if(isset($user['state']))
-                $state = $user['state'];
+        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedOnMailingLists($mailingListId);
+        foreach ($contactsUnsubscribed as $contact) {
+            if(isset($contact['state']))
+                $state = $contact['state'];
             else 
                 $state = 'Unknown';
-            $line .= $user['email'] . ', ' . $state . "\n";
+            $line .= $contact['email'] . ', ' . $state . "\n";
         }
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         unset($line);

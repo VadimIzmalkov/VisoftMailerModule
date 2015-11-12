@@ -5,7 +5,8 @@ namespace VisoftMailerModule\Entity;
 use Doctrine\ORM\Mapping as ORM,
 	Doctrine\Common\Collections\ArrayCollection;
 
-use VisoftMailerModule\Entity\UserInterface;
+use VisoftMailerModule\Entity\UserInterface,
+    VisoftMailerModule\Entity\MailingListInterface;
 
 /**
  * @ORM\Entity
@@ -36,12 +37,24 @@ class StatusContactEnter extends Status
      */
     protected $numContactsExist;
 
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\ManyToMany(targetEntity="VisoftMailerModule\Entity\MailingListInterface")
+     * @ORM\JoinTable(name="statuses_contact_enter",
+     * joinColumns={@ORM\JoinColumn(name="status_id", referencedColumnName="id", onDelete="CASCADE")},
+     * inverseJoinColumns={@ORM\JoinColumn(name="mailing_list_id", referencedColumnName="id", unique=false)}
+     * )
+     */
+    protected $mailingLists;
+
     public function __construct(UserInterface $createdBy, $emailsString) {
     	parent::__construct($createdBy);
     	$this->emailsString = $emailsString;
     	$this->numContacts = 0;
     	$this->numContactsAdded = 0;
     	$this->numContactsExist = 0;
+        $this->mailingLists = new ArrayCollection();
     }
 
     public function getEmailsString() { return $this->emailsString; }
@@ -66,6 +79,24 @@ class StatusContactEnter extends Status
     public function setNumContactsExist($numContactsExist) {
     	$this->numContactsExist = $numContactsExist;
     	return $this;
+    }
+
+    public function getContactLists() { return $this->mailingLists; }
+    public function addContactList(MailingListInterface $mailingList) {
+        $this->mailingLists->add($mailingList);
+        return $this;
+    }
+    public function addContactLists($mailingLists) {
+        foreach ($mailingLists as $mailingList) $this->mailingLists->add($mailingList);
+        return $this;
+    }
+    public function removeContactList(MailingListInterface $mailingList) {
+        $this->mailingLists->removeElement($mailingList);
+        return $this;
+    }
+    public function removeContactLists($mailingLists) {
+        foreach ($mailingLists as $mailingList) $this->mailingLists->removeElement($mailingList);
+        return $this;
     }
 }
 	
