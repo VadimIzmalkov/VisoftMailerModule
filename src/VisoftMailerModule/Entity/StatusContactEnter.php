@@ -5,7 +5,7 @@ namespace VisoftMailerModule\Entity;
 use Doctrine\ORM\Mapping as ORM,
 	Doctrine\Common\Collections\ArrayCollection;
 
-use VisoftMailerModule\Entity\UserInterface,
+use VisoftBaseModule\Entity\UserInterface,
     VisoftMailerModule\Entity\MailingListInterface;
 
 /**

@@ -23,13 +23,17 @@ class ContactService implements ContactServiceInterface
         $this->checkDir($this->moduleOptions->getContactExportedCsvDir());
 	}
 
-	public function enter($contactLists, $emails)
+	public function enter($mailingLists, $emails)
 	{
+        
+        $entityMember = new $entityInfo->name;
+        var_dump($entityInfo);
+        die();
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
         $status = new Entity\StatusContactEnter($authenticatedUser, $emails);
         $status->setState(0);
-        $status->addContactLists($contactLists);
+        $status->addMailingLists($mailingLists);
         $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.text';
         $reportFilePath = $this->moduleOptions->getContactReportsDir() . '/' . $reportFileName;
         $status->setOutputFilePath($reportFilePath);
@@ -56,7 +60,7 @@ class ContactService implements ContactServiceInterface
        	$status = $this->entityManager->getRepository('VisoftMailerModule\Entity\Status')->findOneBy(['id' => $statusId]);
        	if(empty($status)) {
        		echo "status not exists";
-       		return true;
+       		return false;
        	}
 
        	// logging
@@ -92,11 +96,10 @@ class ContactService implements ContactServiceInterface
         $emailsProcessed = []; // emails that alredy processed for avoiding rapids
         while(true) {
         	if(!empty($emailsString)) {
-				if($countContacts >= $countEmails) {
+				if($countContacts >= $countEmails)  
                     break;
-                } else {
+                else
                     $email = $emails[0][$countContacts];
-                }
         	}
         	// check if contact already exist
         	$contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy(['email' => $email]);
@@ -104,7 +107,13 @@ class ContactService implements ContactServiceInterface
         	$emailProcessed = in_array(strtolower($email), array_map('strtolower', $emailsProcessed)); 
         	if($contactNotExist && !$emailProcessed) {
         		$countContactAdded++;
-                $this->persistContact($email);
+                // $this->persistContact($email);
+                // create contact from class metadata
+                $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
+                $contact = new $contactEntityInfo->name;
+                // $contact->setEmail($email);
+                // $contact->setState(6);
+                // $this->entityManager->persist($contact);
         	} else {
         		$countContactExist++;
 				$message = "Warning: " . $email . " alredy exists and cannot be added \n";

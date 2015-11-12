@@ -5,11 +5,11 @@ namespace VisoftMailerModule\Entity;
 use Doctrine\ORM\Mapping as ORM,
 	Doctrine\Common\Collections\ArrayCollection;
 
-use VisoftMailerModule\Entity\UserInterface;
+use VisoftBaseModule\Entity\UserInterface;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="statuses")
+ * @ORM\Table(name="visoft_mailer_statuses")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="discr", type="string")
  * @ORM\DiscriminatorMap( {
@@ -60,7 +60,7 @@ class Status
 
     /**
      * @var UserInterface
-     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\UserInterface")
+     * @ORM\ManyToOne(targetEntity="VisoftBaseModule\Entity\UserInterface")
      * @ORM\JoinColumn(name="created_by_id", referencedColumnName="id", nullable=true,  unique=false)
      */
     protected $createdBy;
