@@ -11,14 +11,14 @@ interface ContactInterface
 	public function getState();
 	public function setState($state);
 	public function getSubscribed();
-	public function addSubscribedSingle(MailingListInterface $mailingList);
-	public function addSubscribedPlural($mailingLists);
-	public function removeSubscribedSingle(MailingListInterface $mailingList);
-	public function removeSubscribedPlural($mailingLists);
+	public function addSubscribedOnMailingList(MailingListInterface $mailingList);
+	public function addSubscribedOnMailingLists($mailingLists);
+	public function removeSubscribedOnMailingList(MailingListInterface $mailingList);
+	public function removeSubscribedOnMailingLists($mailingLists);
 	public function removeAllSubscribtions();
 	public function getUnsubsribed();
-	public function addUnsubsribedSingle(MailingListInterface $mailingList);
-	public function addUnsubsribedPlural($mailingLists);
-	public function removeUnsubsribedSingle(MailingListInterface $mailingList);
-	public function removeUnsubsribedPlural($mailingLists);
+	public function addUnsubsribedFromMailingList(MailingListInterface $mailingList);
+	public function addUnsubsribedFromMailingLists($mailingLists);
+	public function removeUnsubsribedFromMailingList(MailingListInterface $mailingList);
+	public function removeUnsubsribedFromMailingLists($mailingLists);
 }

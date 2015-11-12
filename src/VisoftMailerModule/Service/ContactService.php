@@ -175,22 +175,14 @@ class ContactService implements ContactServiceInterface
         return $status;
     }
 
-    public function extract($statusId)
+    public function dump($statusId)
     {
         $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusContactExport')->findOneBy(['id' => $statusId]);
         $status->setStartedAt(new \Datetime());
         $status->setState(1);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
-        $this->extractContacts($status);
-        $status->setFinishedAt(new \Datetime());
-        $status->setState(2);
-        $this->entityManager->persist($status);
-        $this->entityManager->flush();
-    }
-
-    protected function extractContacts($status)
-    {
+        // begin export
         $mailingListId = $status->getMailingList()->getId();
         $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($mailingListId);
         $csvFilePath = $status->getOutputFilePath();
@@ -209,6 +201,11 @@ class ContactService implements ContactServiceInterface
         }
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         unset($line);
+        // end export
+        $status->setFinishedAt(new \Datetime());
+        $status->setState(2);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
     }
 
     public function getOptions()

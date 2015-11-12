@@ -58,7 +58,7 @@ class ContactController extends BaseController
             throw new \RuntimeException('Status id not specified');
         $process = $this->processingService->createBackgroundProcess("contactsExport", $statusId);
         $process->getWorker()->addFunction('contactsExport', function (\GearmanJob $job) {
-            $this->contactService->extract($job->workload());
+            $this->contactService->dump($job->workload());
             return true;
         });
         $process->run();

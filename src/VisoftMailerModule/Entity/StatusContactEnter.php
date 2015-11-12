@@ -81,20 +81,20 @@ class StatusContactEnter extends Status
     	return $this;
     }
 
-    public function getContactLists() { return $this->mailingLists; }
-    public function addContactList(MailingListInterface $mailingList) {
+    public function getMailingLists() { return $this->mailingLists; }
+    public function addMailingList(MailingListInterface $mailingList) {
         $this->mailingLists->add($mailingList);
         return $this;
     }
-    public function addContactLists($mailingLists) {
+    public function addMailingLists($mailingLists) {
         foreach ($mailingLists as $mailingList) $this->mailingLists->add($mailingList);
         return $this;
     }
-    public function removeContactList(MailingListInterface $mailingList) {
+    public function removeMailingList(MailingListInterface $mailingList) {
         $this->mailingLists->removeElement($mailingList);
         return $this;
     }
-    public function removeContactLists($mailingLists) {
+    public function removeMailingLists($mailingLists) {
         foreach ($mailingLists as $mailingList) $this->mailingLists->removeElement($mailingList);
         return $this;
     }
