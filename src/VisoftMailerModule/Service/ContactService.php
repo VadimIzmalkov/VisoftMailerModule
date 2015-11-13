@@ -25,10 +25,6 @@ class ContactService implements ContactServiceInterface
 
 	public function enter($mailingLists, $emails)
 	{
-        
-        $entityMember = new $entityInfo->name;
-        var_dump($entityInfo);
-        die();
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
         $status = new Entity\StatusContactEnter($authenticatedUser, $emails);
@@ -94,6 +90,8 @@ class ContactService implements ContactServiceInterface
         $countContactAdded = 0;
         $countContactExist = 0;
         $emailsProcessed = []; // emails that alredy processed for avoiding rapids
+        $mailingLists = $status->getMailingLists();
+        $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', 2); // 2 - Not Confirmed
         while(true) {
         	if(!empty($emailsString)) {
 				if($countContacts >= $countEmails)  
@@ -106,18 +104,18 @@ class ContactService implements ContactServiceInterface
         	$contactNotExist = empty($contact);
         	$emailProcessed = in_array(strtolower($email), array_map('strtolower', $emailsProcessed)); 
         	if($contactNotExist && !$emailProcessed) {
-        		$countContactAdded++;
-                // $this->persistContact($email);
-                // create contact from class metadata
                 $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
                 $contact = new $contactEntityInfo->name;
-                // $contact->setEmail($email);
+                $contact->setState($contactState);
+                $contact->addSubscribedOnMailingLists($mailingLists);
+                $contact->setEmail($email);
                 // $contact->setState(6);
-                // $this->entityManager->persist($contact);
+                $this->entityManager->persist($contact);
+                $countContactAdded++;
         	} else {
-        		$countContactExist++;
 				$message = "Warning: " . $email . " alredy exists and cannot be added \n";
        			file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
+                $countContactExist++;
         	}
         	array_push($emailsProcessed, $email);
         	$countContacts++;
@@ -197,13 +195,13 @@ class ContactService implements ContactServiceInterface
         $csvFilePath = $status->getOutputFilePath();
         $line = "Email, State \n";
         foreach ($contactsSubscribed as $contact) 
-            $line .= $contact['email'] . ', '. $contact['state'] . "\n";
+            $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         $line = null;
         $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedOnMailingLists($mailingListId);
         foreach ($contactsUnsubscribed as $contact) {
-            if(isset($contact['state']))
-                $state = $contact['state'];
+            if(isset($contact['stateName']))
+                $state = $contact['stateName'];
             else 
                 $state = 'Unknown';
             $line .= $contact['email'] . ', ' . $state . "\n";
