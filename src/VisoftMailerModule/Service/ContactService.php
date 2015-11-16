@@ -13,7 +13,11 @@ class ContactService implements ContactServiceInterface
 	protected $moduleOptions;
 	protected $authenticationService;
 
-	public function __construct(EntityManager $entityManager, ModuleOptions $moduleOptions, $authenticationService)
+	public function __construct(
+        EntityManager $entityManager, 
+        ModuleOptions $moduleOptions, 
+        $authenticationService
+    )
 	{
 		$this->entityManager = $entityManager;
 		$this->moduleOptions = $moduleOptions;
@@ -92,6 +96,7 @@ class ContactService implements ContactServiceInterface
         $emailsProcessed = []; // emails that alredy processed for avoiding rapids
         $mailingLists = $status->getMailingLists();
         $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', 2); // 2 - Not Confirmed
+        $contactRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', 4); // 4 - subscriber
         while(true) {
         	if(!empty($emailsString)) {
 				if($countContacts >= $countEmails)  
@@ -109,7 +114,7 @@ class ContactService implements ContactServiceInterface
                 $contact->setState($contactState);
                 $contact->addSubscribedOnMailingLists($mailingLists);
                 $contact->setEmail($email);
-                // $contact->setState(6);
+                $contact->setRole($contactRole);
                 $this->entityManager->persist($contact);
                 $countContactAdded++;
         	} else {
@@ -198,7 +203,7 @@ class ContactService implements ContactServiceInterface
             $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         $line = null;
-        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedOnMailingLists($mailingListId);
+        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($mailingListId);
         foreach ($contactsUnsubscribed as $contact) {
             if(isset($contact['stateName']))
                 $state = $contact['stateName'];
