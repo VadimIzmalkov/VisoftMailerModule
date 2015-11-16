@@ -28,7 +28,7 @@ class StatusMailer extends Status
      * @var ArrayCollection
      *
      * @ORM\ManyToMany(targetEntity="VisoftMailerModule\Entity\MailingListInterface")
-     * @ORM\JoinTable(name="statuses_contact_enter",
+     * @ORM\JoinTable(name="visoft_mailer_statuses_mailer_to_mailing_lists",
      * joinColumns={@ORM\JoinColumn(name="status_id", referencedColumnName="id", onDelete="CASCADE")},
      * inverseJoinColumns={@ORM\JoinColumn(name="mailing_list_id", referencedColumnName="id", unique=false)}
      * )
