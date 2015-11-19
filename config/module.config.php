@@ -29,19 +29,6 @@ return [
             ],
         ],
     ],
-    // 'router' => [
-    //     'routes' => [
-    //         'visoft-mailer' => [
-    //             'type' => 'Segment',
-    //             'options' => [
-    //                 'route' => '/visoft-mailer/:controller/:action[/:entityId[/]]',
-    //                 'defaults' => [
-    //                     '__NAMESPACE__' => 'VisoftMailerModule\Controller',
-    //                 ],
-    //             ],
-    //         ],
-    //     ],
-    // ],
     'doctrine' => array(
         'driver' => array(
             __NAMESPACE__ . '_driver' => array(
@@ -57,14 +44,5 @@ return [
                 )
             )
         ),
-        // 'entity_resolver' => array(
-        //     'orm_default' => array(
-        //         'resolvers' => array(
-        //             'VisoftBaseModule\Entity\UserInterface' => 'Application\Entity\User',
-        //             'VisoftMailerModule\Entity\MailingListInterface' => 'Application\Entity\MailingList',
-        //             // 'VisoftMailerModule\Entity\ContactInterface' => 'Application\Entity\Contact',
-        //         ),
-        //     ),
-        // ),
     ),
 ];
