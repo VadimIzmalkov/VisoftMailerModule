@@ -48,9 +48,8 @@ class StatusContactEnter extends Status
      */
     protected $mailingLists;
 
-    public function __construct(UserInterface $createdBy, $emailsString) {
-    	parent::__construct($createdBy);
-    	$this->emailsString = $emailsString;
+    public function __construct() {
+    	parent::__construct();
     	$this->numContacts = 0;
     	$this->numContactsAdded = 0;
     	$this->numContactsExist = 0;
@@ -58,10 +57,10 @@ class StatusContactEnter extends Status
     }
 
     public function getEmailsString() { return $this->emailsString; }
-    // public function setEmailsString($state) {
-    // 	$this->state = $state;
-    // 	return $this;
-    // }
+    public function setEmailsString($emailsString) {
+    	$this->emailsString = $emailsString;
+    	return $this;
+    }
 
     public function getNumContacts() { return $this->numContacts; }
     public function setNumContacts($numContacts) {
@@ -87,7 +86,13 @@ class StatusContactEnter extends Status
         return $this;
     }
     public function addMailingLists($mailingLists) {
-        foreach ($mailingLists as $mailingList) $this->mailingLists->add($mailingList);
+        if(is_array($mailingLists) || $mailingLists instanceof Traversable)
+            foreach ($mailingLists as $mailingList) 
+                $this->mailingLists->add($mailingList);
+        elseif($mailingLists instanceof MailingListInterface)
+            $this->mailingLists->add($mailingLists);
+        else 
+            throw new \Exception("$mailingLists is expected to be instance of MailingListInterface or Traversable", 1);
         return $this;
     }
     public function removeMailingList(MailingListInterface $mailingList) {
@@ -95,7 +100,8 @@ class StatusContactEnter extends Status
         return $this;
     }
     public function removeMailingLists($mailingLists) {
-        foreach ($mailingLists as $mailingList) $this->mailingLists->removeElement($mailingList);
+        foreach ($mailingLists as $mailingList) 
+            $this->mailingLists->removeElement($mailingList);
         return $this;
     }
 }

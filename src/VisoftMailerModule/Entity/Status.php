@@ -72,11 +72,10 @@ class Status
      */
     protected $outputFilePath;
 
-    public function __construct(UserInterface $createdBy)
+    public function __construct()
     {
+        $this->token = md5(uniqid(mt_rand(), true));
     	$this->createdAt = new \DateTime();
-        $this->createdBy = $createdBy;
-    	$this->token = md5(uniqid(mt_rand(), true));
     }
 
     public function getId() { return $this->id; }
@@ -104,10 +103,10 @@ class Status
     }
 
     public function getCreatedBy() { return $this->createdBy; }
-    // public function setCreatedBy($createdBy) {
-    //     $this->createdBy = $createdBy;
-    //     return $this;
-    // }
+    public function setCreatedBy($createdBy) {
+        $this->createdBy = $createdBy;
+        return $this;
+    }
 
     public function getFinishedAt() { return $this->finishedAt; }
     public function setFinishedAt($finishedAt) {

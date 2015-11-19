@@ -27,12 +27,14 @@ class ContactService implements ContactServiceInterface
         $this->checkDir($this->moduleOptions->getContactExportedCsvDir());
 	}
 
-	public function enter($mailingLists, $emails)
+	public function enter($mailingLists, $emailsString)
 	{
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
-        $status = new Entity\StatusContactEnter($authenticatedUser, $emails);
+        $status = new Entity\StatusContactEnter();
         $status->setState(0);
+        // $status->setCreatedBy($authenticatedUser);
+        $status->setEmailsString($emailsString);
         $status->addMailingLists($mailingLists);
         $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.text';
         $reportFilePath = $this->moduleOptions->getContactReportsDir() . '/' . $reportFileName;
@@ -96,7 +98,7 @@ class ContactService implements ContactServiceInterface
         $emailsProcessed = []; // emails that alredy processed for avoiding rapids
         $mailingLists = $status->getMailingLists();
         $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', 2); // 2 - Not Confirmed
-        $contactRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', 4); // 4 - subscriber
+        // $contactRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', 4); // 4 - subscriber
         while(true) {
         	if(!empty($emailsString)) {
 				if($countContacts >= $countEmails)  
@@ -114,7 +116,7 @@ class ContactService implements ContactServiceInterface
                 $contact->setState($contactState);
                 $contact->addSubscribedOnMailingLists($mailingLists);
                 $contact->setEmail($email);
-                $contact->setRole($contactRole);
+                // $contact->setRole($contactRole);
                 $this->entityManager->persist($contact);
                 $countContactAdded++;
         	} else {

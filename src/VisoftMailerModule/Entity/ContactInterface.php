@@ -4,6 +4,12 @@ namespace VisoftMailerModule\Entity;
 
 interface ContactInterface 
 {
+	public function getId();
+
+	public function getToken();
+
+	public function getRegisterDate();
+	
 	public function getFullName();
 	public function setFullname($fullName);
 
@@ -13,17 +19,20 @@ interface ContactInterface
 	public function getState();
 	public function setState($state);
 
-	public function getSubscribed();
+    public function getRegisterBy();
+    public function setRegisterBy($registerBy);
+
+	public function getSubscribedOnMailingLists();
 	public function addSubscribedOnMailingList(MailingListInterface $mailingList);
 	public function addSubscribedOnMailingLists($mailingLists);
 	public function removeSubscribedOnMailingList(MailingListInterface $mailingList);
 	public function removeSubscribedOnMailingLists($mailingLists);
 
-	public function getUnsubsribed();
-	public function addUnsubsribedFromMailingList(MailingListInterface $mailingList);
-	public function addUnsubsribedFromMailingLists($mailingLists);
-	public function removeUnsubsribedFromMailingList(MailingListInterface $mailingList);
-	public function removeUnsubsribedFromMailingLists($mailingLists);
+	public function getUnsubscribedFromMailingLists();
+	public function addUnsubscribedFromMailingList(MailingListInterface $mailingList);
+	public function addUnsubscribedFromMailingLists($mailingLists);
+	public function removeUnsubscribedFromMailingList(MailingListInterface $mailingList);
+	public function removeUnsubscribedFromMailingLists($mailingLists);
 
 	public function removeAllSubscribtions();
 }

@@ -56,6 +56,15 @@ return [
                     __NAMESPACE__ . '\Entity' => __NAMESPACE__ . '_driver',
                 )
             )
-        )
+        ),
+        // 'entity_resolver' => array(
+        //     'orm_default' => array(
+        //         'resolvers' => array(
+        //             'VisoftBaseModule\Entity\UserInterface' => 'Application\Entity\User',
+        //             'VisoftMailerModule\Entity\MailingListInterface' => 'Application\Entity\MailingList',
+        //             // 'VisoftMailerModule\Entity\ContactInterface' => 'Application\Entity\Contact',
+        //         ),
+        //     ),
+        // ),
     ),
 ];

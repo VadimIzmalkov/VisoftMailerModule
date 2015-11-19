@@ -15,12 +15,12 @@ class StatusContactExport extends Status
     /**
      * @var ContactListInterface
      * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\MailingListInterface")
-     * @ORM\JoinColumn(name="contact_list", referencedColumnName="id", nullable=true,  unique=false)
+     * @ORM\JoinColumn(name="mailing_list", referencedColumnName="id", nullable=true,  unique=false)
      */
     protected $mailingList;
 
-    public function __construct(UserInterface $createdBy) {
-    	parent::__construct($createdBy);
+    public function __construct() {
+    	parent::__construct();
     }
 
     public function getMailingList() { return $this->mailingList; }

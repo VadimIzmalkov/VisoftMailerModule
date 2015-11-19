@@ -11,6 +11,9 @@ class ModuleOptions extends AbstractOptions
     protected $contactExportedCsvDir;
     protected $contactReportsDir;
 
+    // tempaltes paths
+    protected $emailTemplateLayoutAPath;
+
     public function __construct($options)
     {
     	$this->contactDir = getcwd() . '/data/VisoftMailerModule/contact';
