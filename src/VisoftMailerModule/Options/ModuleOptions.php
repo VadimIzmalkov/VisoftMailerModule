@@ -11,6 +11,9 @@ class ModuleOptions extends AbstractOptions
     protected $contactExportedCsvDir;
     protected $contactReportsDir;
 
+    protected $mailerDir;
+    protected $mailerLogDir;
+
     // tempaltes paths
     protected $emailTemplateLayoutAPath;
 
@@ -20,6 +23,10 @@ class ModuleOptions extends AbstractOptions
     	$this->contactLogDir = $this->contactDir . '/log';
     	$this->contactExportedCsvDir = $this->contactDir . '/exported-csv';
         $this->contactReportsDir = $this->contactDir . '/reports';
+
+        $this->mailerDir = getcwd() . '/data/VisoftMailerModule/mailer';
+        $this->mailerLogDir = $this->contactDir . '/log';
+
     	parent::__construct($options);
     }
 
@@ -44,6 +51,18 @@ class ModuleOptions extends AbstractOptions
     public function getContactReportsDir() { return $this->contactReportsDir; }
     public function setContactReportsDir($contactReportsDir) { 
         $this->contactReportsDir = $contactReportsDir;
+        return $this;
+    }
+
+    public function getMailerDir() { return $this->mailerDir; }
+    public function setMailerDir($mailerDir) { 
+        $this->mailerDir = $mailerDir;
+        return $this;
+    }
+
+    public function getMailerLogDir() { return $this->mailerLogDir; }
+    public function setMailerLogDir($mailerLogDir) { 
+        $this->mailerLogDir = $mailerLogDir;
         return $this;
     }
 }

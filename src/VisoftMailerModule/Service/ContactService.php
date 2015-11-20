@@ -32,7 +32,7 @@ class ContactService implements ContactServiceInterface
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
         $status = new Entity\StatusContactEnter();
-        $status->setState(0);
+        // $status->setState(0);
         // $status->setCreatedBy($authenticatedUser);
         $status->setEmailsString($emailsString);
         $status->addMailingLists($mailingLists);

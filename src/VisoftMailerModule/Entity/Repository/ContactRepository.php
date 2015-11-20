@@ -6,6 +6,16 @@ use Doctrine\ORM\EntityRepository;
 
 class ContactRepository extends EntityRepository
 {
+    public function findByMailingListIds($mailingListIds)
+    {
+        $queryBuilder = $this->createQueryBuilder('contact');
+        $queryBuilder
+            ->select('contact.id', 'contact.email')
+            ->leftJoin('contact.subscribedOnMailingLists', 'subscribedOnMailingLists')
+            ->add('where', $queryBuilder->expr()->in('subscribedOnMailingLists', $mailingListIds));
+        return $queryBuilder->getQuery()->getResult();
+    }
+
     public function getCountByMailingListIds($mailingListIds)
     {
         $queryBuilder = $this->createQueryBuilder('contact');

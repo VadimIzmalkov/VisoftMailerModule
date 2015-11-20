@@ -27,8 +27,14 @@ class Campaign
     protected $name;
 
     /**
+     * @var string
+     * @ORM\Column(name="subject", type="string", length=255, nullable=true, unique=false)
+     */
+    protected $subject;
+
+    /**
      * @var EmailTemplateInterface
-     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\EmailTemplateInterface")
+     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\EmailTemplateInterface", inversedBy="campaign")
      * @ORM\JoinColumn(name="email_template_id", referencedColumnName="id", nullable=true,  unique=false)
      */
     protected $emailTemplate;
@@ -84,6 +90,12 @@ class Campaign
         return $this;
     }
 
+    public function getSubject() { return $this->subject; }
+    public function setSubject($subject) {
+        $this->subject = $subject;
+        return $this;
+    }
+
     public function getEmailTemplate() { return $this->emailTemplate; }
     public function setEmailTemplate($emailTemplate) {
         $this->emailTemplate = $emailTemplate;
@@ -96,7 +108,7 @@ class Campaign
         return $this;
     }
     public function addMailingLists($mailingLists) {
-        if(is_array($mailingLists) || $mailingLists instanceof Traversable)
+        if(is_array($mailingLists) || $mailingLists instanceof Traversable || $mailingLists instanceof ArrayCollection)
             foreach ($mailingLists as $mailingList) 
                 $this->mailingLists->add($mailingList);
         elseif($mailingLists instanceof MailingListInterface)

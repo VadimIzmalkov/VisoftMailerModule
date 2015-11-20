@@ -49,7 +49,8 @@ class Module
                     $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
                     $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
                     $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
-                    return new MailerService\MailerService($entityManager, $moduleOptions, $authenticationService);
+                    $acMailService = $serviceLocator->get('AcMailer\Service\MailService');
+                    return new MailerService\MailerService($entityManager, $moduleOptions, $authenticationService, $acMailService);
                 },
             ],
         ];
