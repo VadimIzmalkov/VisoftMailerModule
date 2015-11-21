@@ -6,7 +6,7 @@ use Zend\Stdlib\AbstractOptions;
 
 class ModuleOptions extends AbstractOptions
 {
-	protected $contactDir;
+	protected $dataModuleDir;
     protected $contactLogDir;
     protected $contactExportedCsvDir;
     protected $contactReportsDir;
@@ -19,26 +19,23 @@ class ModuleOptions extends AbstractOptions
 
     public function __construct($options)
     {
-    	$this->contactDir = getcwd() . '/data/VisoftMailerModule/contact';
-    	$this->contactLogDir = $this->contactDir . '/log';
-    	$this->contactExportedCsvDir = $this->contactDir . '/exported-csv';
-        $this->contactReportsDir = $this->contactDir . '/reports';
-
-        $this->mailerDir = getcwd() . '/data/VisoftMailerModule/mailer';
-        $this->mailerLogDir = $this->contactDir . '/log';
+    	$this->dataModuleDir = getcwd() . '/data/VisoftMailerModule';
+    	$this->logDir = $this->dataModuleDir . '/log';
+    	$this->contactExportedCsvDir = $this->dataModuleDir . '/contacts/exported-csv';
+        $this->contactReportsDir = $this->dataModuleDir . '/contacts/reports';
 
     	parent::__construct($options);
     }
 
-    public function getContactDir() { return $this->contactDir; }
-    public function setContactDir($contactDir) { 
-    	$this->contactDir = $contactDir;
+    public function getDataModuleDir() { return $this->dataModuleDir; }
+    public function setDataModuleDir($dataModuleDir) { 
+    	$this->dataModuleDir = $dataModuleDir;
         return $this;
     }
 
-    public function getContactLogDir() { return $this->contactLogDir; }
-    public function setContactLogDir($contactLogDir) { 
-    	$this->contactLogDir = $contactLogDir;
+    public function getLogDir() { return $this->logDir; }
+    public function setLogDir($logDir) { 
+    	$this->logDir = $logDir;
         return $this;
     }
 
@@ -51,18 +48,6 @@ class ModuleOptions extends AbstractOptions
     public function getContactReportsDir() { return $this->contactReportsDir; }
     public function setContactReportsDir($contactReportsDir) { 
         $this->contactReportsDir = $contactReportsDir;
-        return $this;
-    }
-
-    public function getMailerDir() { return $this->mailerDir; }
-    public function setMailerDir($mailerDir) { 
-        $this->mailerDir = $mailerDir;
-        return $this;
-    }
-
-    public function getMailerLogDir() { return $this->mailerLogDir; }
-    public function setMailerLogDir($mailerLogDir) { 
-        $this->mailerLogDir = $mailerLogDir;
         return $this;
     }
 }

@@ -26,6 +26,16 @@ return [
                         ],
                     ]
                 ],
+                'send-campaign' => [
+                    'options' => [
+                        'route' => 'send-campaign <statusid>',
+                        'defaults' => [
+                            '__NAMESPACE__' => 'VisoftMailerModule\Controller',
+                            'controller'    => 'mailer',
+                            'action'        => 'send-campaign',
+                        ],
+                    ]
+                ],
             ],
         ],
     ],

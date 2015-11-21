@@ -6,7 +6,7 @@ use Doctrine\ORM\EntityRepository;
 
 class ContactRepository extends EntityRepository
 {
-    public function findByMailingListIds($mailingListIds)
+    public function findByMailingListsIds($mailingListIds)
     {
         $queryBuilder = $this->createQueryBuilder('contact');
         $queryBuilder

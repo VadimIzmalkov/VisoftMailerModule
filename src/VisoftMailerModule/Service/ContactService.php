@@ -22,7 +22,7 @@ class ContactService implements ContactServiceInterface
 		$this->entityManager = $entityManager;
 		$this->moduleOptions = $moduleOptions;
 		$this->authenticationService = $authenticationService;
-		$this->checkDir($this->moduleOptions->getContactLogDir());
+		$this->checkDir($this->moduleOptions->getLogDir());
         $this->checkDir($this->moduleOptions->getContactReportsDir());
         $this->checkDir($this->moduleOptions->getContactExportedCsvDir());
 	}
@@ -43,9 +43,9 @@ class ContactService implements ContactServiceInterface
         $this->entityManager->flush();
         $statusId = $status->getId();
         // command to run exporting in separated process
-        $logWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+        $logWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.log';
-        $errWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+        $errWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.err';
         $shell = 'php public/index.php contacts-enter ' 
             . $statusId 

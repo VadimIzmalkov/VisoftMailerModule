@@ -27,25 +27,24 @@ class MailerService implements MailerServiceInterface
 		$this->moduleOptions = $moduleOptions;
 		$this->authenticationService = $authenticationService;
 		$this->acMailService = $acMailService;
-		$this->checkDir($this->moduleOptions->getMailerDir());
-        $this->checkDir($this->moduleOptions->getMailerLogDir());
+        $this->checkDir($this->moduleOptions->getLogDir());
 	}
 
-	public function send($campaign)
+	public function sendCampaign($campaign)
 	{
 		$now = new \DateTime();
 		$authenticatedUser = $this->authenticationService->getIdentity();
-		$status = new Entity\StatusMailer($authenticatedUser, $template['path'], $template['parameters']);
+		$status = new Entity\StatusMailer();
 		$status->setcampaign($campaign);
 		$this->entityManager->persist($status);
         $this->entityManager->flush();
         $statusId = $status->getId();
         // command to run exporting in separated process
-        $logWorkerFilePath = $this->moduleOptions->getMailerLogDir() 
+        $logWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.log';
-        $errWorkerFilePath = $this->moduleOptions->getMailerLogDir() 
+        $errWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.err';
-        $shell = 'php public/index.php send-mails ' 
+        $shell = 'php public/index.php send-campaign ' 
             . $statusId 
             . ' >' . $logWorkerFilePath 
             . ' 2>' . $errWorkerFilePath 
@@ -54,7 +53,7 @@ class MailerService implements MailerServiceInterface
         return $status;
 	}
 
-	public function performSending($statusId)
+	public function send($statusId)
 	{
 		// check if status exist
        	$status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
@@ -70,8 +69,9 @@ class MailerService implements MailerServiceInterface
         $this->entityManager->flush();
 
         // start sending
+        $campaign = $status->getCampaign();
         $mailingListsIds = $campaign->getMailingLists()->map(function($entity) { return $entity->getId(); })->toArray();
-        $contacts = $this->entityManager->getRepository('VisoftMailerModule\Entity\Contact')->findByMailingListIds($mailingListsIds);
+        $contacts = $this->entityManager->getRepository('Application\Entity\Contact')->findByMailingListsIds($mailingListsIds);
         $numSent = 0;
         foreach ($contacts as $contact) {
         	if(!empty($recipientState = $this->entityManager->getRepository('VisoftMailerModule\Entity\RecipientState')->findOneBy(['email' => $contact['email'], 'campaign' => $campaign])))
@@ -81,8 +81,8 @@ class MailerService implements MailerServiceInterface
             $recipientState->setCampaign($campaign);
 			
 			// set Ac Mailer
-			$this->acMailService->setBody($campaign->getSubject());
-            $this->acMailService->setSubject($campaign->getEmailTemplate()->getBodyText());
+			$this->acMailService->setBody($campaign->getEmailTemplate()->getBodyText());
+            $this->acMailService->setSubject($campaign->getSubject());
             $message = $this->acMailService->getMessage();
             $message->setTo($contact['email']);
             $result = $this->acMailService->send();
@@ -114,4 +114,27 @@ class MailerService implements MailerServiceInterface
         $this->entityManager->flush();
         return $entity;
 	}
+
+    public function getOptions()
+    {
+        return $this->moduleOptions;
+    }
+
+    protected function checkDir($path)
+    {
+        if (!is_dir($path)) {
+            $oldmask = umask(0);
+            if (!mkdir($path, 0777, true)) {
+                die('Failed to create folders' . $path );
+            }
+            umask($oldmask);
+        }        
+    }
+
+    protected function getDateTimeWithMicroseconds()
+    {
+        $time = microtime(true);
+        $micro = sprintf("%06d",($time - floor($time)) * 1000000);
+        return new \DateTime(date('Y-m-d H:i:s.' . $micro, $time));
+    }
 }

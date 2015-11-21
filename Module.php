@@ -68,6 +68,14 @@ class Module
                     $processingService = $serviceLocator->get('VisoftBaseModule\Service\ProcessingService');
                     return new Controller\ContactController($entityManager, $contactService, $moduleOptions, $processingService);
                 },
+                'VisoftMailerModule\Controller\Mailer' => function(ControllerManager $controllerManager) {
+                    $serviceLocator = $controllerManager->getServiceLocator();
+                    $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
+                    $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
+                    $processingService = $serviceLocator->get('VisoftBaseModule\Service\ProcessingService');
+                    $mailerService = $serviceLocator->get('VisoftMailerModule\Service\MailerService');
+                    return new Controller\MailerController($entityManager, $mailerService, $moduleOptions, $processingService);
+                },
             ),
         );
     }
