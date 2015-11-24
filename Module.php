@@ -43,7 +43,8 @@ class Module
                     $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
                     $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
                     $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
-                    return new MailerService\ContactService($entityManager, $moduleOptions, $authenticationService);
+                    $userService = $serviceLocator->get('VisoftBaseModule\Service\UserService');
+                    return new MailerService\ContactService($entityManager, $moduleOptions, $authenticationService, $userService);
                 },
                 'VisoftMailerModule\Service\MailerService' => function($serviceLocator) {
                     $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');

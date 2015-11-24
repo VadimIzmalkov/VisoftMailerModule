@@ -5,12 +5,13 @@ namespace VisoftMailerModule\Entity;
 use Doctrine\ORM\Mapping as ORM,
 	Doctrine\Common\Collections\ArrayCollection;
 
-use VisoftBaseModule\Entity\UserInterface;
+use VisoftBaseModule\Entity\UserInterface,
+    VisoftMailerModule\Entity\MailingListInterface;
 
 /**
  * @ORM\Entity
  */
-class StatusContactExport extends Status
+class StatusContactTruncate extends Status
 {
     /**
      * @var ContactListInterface
@@ -19,7 +20,8 @@ class StatusContactExport extends Status
      */
     protected $mailingList;
 
-    public function __construct() {
+    public function __construct() 
+    {
     	parent::__construct();
     }
 
@@ -29,4 +31,3 @@ class StatusContactExport extends Status
     	return $this;
     }
 }
-	

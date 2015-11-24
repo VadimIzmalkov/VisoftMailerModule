@@ -86,7 +86,7 @@ class StatusContactEnter extends Status
         return $this;
     }
     public function addMailingLists($mailingLists) {
-        if(is_array($mailingLists) || $mailingLists instanceof Traversable)
+        if(is_array($mailingLists) || $mailingLists instanceof Traversable || $mailingLists instanceof ArrayCollection)
             foreach ($mailingLists as $mailingList) 
                 $this->mailingLists->add($mailingList);
         elseif($mailingLists instanceof MailingListInterface)

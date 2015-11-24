@@ -4,24 +4,29 @@ namespace VisoftMailerModule\Service;
 
 use Doctrine\ORM\EntityManager;
 
-use VisoftMailerModule\Entity,
-	VisoftMailerModule\Options\ModuleOptions;
+use VisoftBaseModule\Entity\UserInterface,
+    VisoftBaseModule\Service\UserServiceInterface,
+    VisoftMailerModule\Options\ModuleOptions,
+    VisoftMailerModule\Entity;
 
 class ContactService implements ContactServiceInterface
 {
 	protected $entityManager;
 	protected $moduleOptions;
 	protected $authenticationService;
+    protected $userService;
 
 	public function __construct(
-        EntityManager $entityManager, 
+        EntityManager $entityManager,
         ModuleOptions $moduleOptions, 
-        $authenticationService
+        $authenticationService,
+        UserServiceInterface $userService
     )
 	{
 		$this->entityManager = $entityManager;
 		$this->moduleOptions = $moduleOptions;
-		$this->authenticationService = $authenticationService;
+		$this->userService = $userService;
+        $this->authenticationService = $authenticationService;
 		$this->checkDir($this->moduleOptions->getLogDir());
         $this->checkDir($this->moduleOptions->getContactReportsDir());
         $this->checkDir($this->moduleOptions->getContactExportedCsvDir());
@@ -64,6 +69,10 @@ class ContactService implements ContactServiceInterface
        		echo "status not exists";
        		return false;
        	}
+        $status->setStartedAt(new \Datetime());
+        $status->setState(1);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
 
        	// logging
        	$reportFilePath = $status->getOutputFilePath();
@@ -73,12 +82,6 @@ class ContactService implements ContactServiceInterface
        	$message .= "------------------------------------------------------------------- \n";
        	$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Connected to worker. \n";
        	file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
-       	
-       	// update state status
-        $status->setStartedAt(new \Datetime());
-        $status->setState(1);
-        $this->entityManager->persist($status);
-        $this->entityManager->flush();
 
         // logging
        	$message = "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Persisting started. \n";
@@ -98,7 +101,7 @@ class ContactService implements ContactServiceInterface
         $emailsProcessed = []; // emails that alredy processed for avoiding rapids
         $mailingLists = $status->getMailingLists();
         $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', 2); // 2 - Not Confirmed
-        // $contactRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', 4); // 4 - subscriber
+        $subscriberRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', $this->userService->getOptions()->getRoleSubscriberId()); // 4 - subscriber
         while(true) {
         	if(!empty($emailsString)) {
 				if($countContacts >= $countEmails)  
@@ -116,7 +119,9 @@ class ContactService implements ContactServiceInterface
                 $contact->setState($contactState);
                 $contact->addSubscribedOnMailingLists($mailingLists);
                 $contact->setEmail($email);
-                // $contact->setRole($contactRole);
+                if($contact instanceof UserInterface) {
+                    $contact->setRole($subscriberRole);
+                }
                 $this->entityManager->persist($contact);
                 $countContactAdded++;
         	} else {
@@ -154,14 +159,6 @@ class ContactService implements ContactServiceInterface
    		file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
 	}
 
-    protected function persistContact($email)
-    {
-        // $contact = new \VisoftMailerModule\Entity\ContactInterface();
-        // $contact->setEmail($email);
-        // $contact->setState(6);
-        // $this->entityManager->persist($contact);
-    }
-
     public function export(Entity\MailingListInterface $mailingList)
     {
         $now = new \DateTime();
@@ -191,14 +188,9 @@ class ContactService implements ContactServiceInterface
 
     public function dump($statusId)
     {
-        $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusContactExport')->findOneBy(['id' => $statusId]);
-        $status->setStartedAt(new \Datetime());
-        $status->setState(1);
-        $this->entityManager->persist($status);
-        $this->entityManager->flush();
+        $status = $this->processStart($statusId);
         // begin export
-        $mailingListId = $status->getMailingList()->getId();
-        $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($mailingListId);
+        $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getMailingList()->getId());
         $csvFilePath = $status->getOutputFilePath();
         $line = "Email, State \n";
         foreach ($contactsSubscribed as $contact) 
@@ -215,16 +207,75 @@ class ContactService implements ContactServiceInterface
         }
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         unset($line);
-        // end export
+    }
+
+    public function emptyMailingList($mailingList)
+    {
+        $now = new \DateTime();
+        $authenticatedUser = $this->authenticationService->getIdentity();
+        // status init
+        $status = new Entity\StatusContactTruncate();
+        $status->setMailingList($mailingList);
+        $status->setState(0);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
+        $statusId = $status->getId();
+        // command to run exporting in separated process
+        $logWorkerFilePath = $this->moduleOptions->getLogDir() 
+            . '/worker_contacts_truncate_' . $now->format("Y-m-d_H-i-s") . '.log';
+        $errWorkerFilePath = $this->moduleOptions->getLogDir() 
+            . '/worker_contacts_truncate_' . $now->format("Y-m-d_H-i-s") . '.err';
+        $shell = 'php public/index.php contacts-truncate ' 
+            . $statusId 
+            . ' >' . $logWorkerFilePath 
+            . ' 2>' . $errWorkerFilePath 
+            . ' &';
+        shell_exec($shell);
+        return $status;
+    }
+
+    public function truncate($status)
+    {
+        // update status
+        $contacts = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getMailingList()->getId());
+        foreach ($contacts as $contactArray) {
+            $contact = $this->entityManager->find('VisoftMailerModule\Entity\ContactInterface', $contactArray['id']);
+            if($contact instanceof UserInterface) {
+                if($contact->getRole()->getId() === $this->userService->getOptions()->getRoleSubscriberId())
+                    $this->entityManager->remove($contact);
+            } else {
+                $this->entityManager->remove($contact);
+            }   
+        }
+        $this->entityManager->flush();
+    }
+
+    public function processStarted($statusId)
+    {
+        $status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
+        if(empty($status)) {
+            echo "status not exists";
+            return false;
+        }
+        $status->setStartedAt(new \Datetime());
+        $status->setState(1);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
+        return $status;
+    }
+
+    public function processCompleted($status)
+    {
         $status->setFinishedAt(new \Datetime());
         $status->setState(2);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
+        return $status;
     }
 
     public function getOptions()
     {
-        return $this->moduleOptions;
+        return $this->selfModuleOptions;
     }
 
     protected function checkDir($path)

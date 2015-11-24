@@ -31,10 +31,4 @@ class MailingListRepository extends EntityRepository
         $queryBuilder->setFirstResult($offset);
         return $queryBuilder->getQuery()->getResult();
     }
-
-    // public function findByMailingListPaginated($mailingList, $paginationQuery = null)
-    // {
-    //     $queryBuilder = $this->createQueryBuilder('mailingList');
-    //     $queryBuilder->select('mailingList.id', 'mailingList.name');
-    // }
 }

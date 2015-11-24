@@ -7,15 +7,16 @@ use Zend\Stdlib\AbstractOptions;
 class ModuleOptions extends AbstractOptions
 {
 	protected $dataModuleDir;
-    protected $contactLogDir;
+    protected $logDir;
     protected $contactExportedCsvDir;
     protected $contactReportsDir;
 
-    protected $mailerDir;
-    protected $mailerLogDir;
-
-    // tempaltes paths
-    protected $emailTemplateLayoutAPath;
+    // contact states
+    protected $contactStateUnknown = 1;
+    protected $contactStateNotConfirmed = 2;
+    protected $contactStateConfirmed = 3;
+    protected $contactStateBlocked = 4;
+    protected $contactStateNotValid = 5;
 
     public function __construct($options)
     {

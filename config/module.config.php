@@ -26,6 +26,16 @@ return [
                         ],
                     ]
                 ],
+                'contacts-truncate' => [
+                    'options' => [
+                        'route' => 'contacts-truncate <statusid>',
+                        'defaults' => [
+                            '__NAMESPACE__' => 'VisoftMailerModule\Controller',
+                            'controller'    => 'contact',
+                            'action'        => 'contacts-truncate',
+                        ],
+                    ]
+                ],
                 'send-campaign' => [
                     'options' => [
                         'route' => 'send-campaign <statusid>',

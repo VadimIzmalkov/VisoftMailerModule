@@ -6,7 +6,7 @@ use Doctrine\ORM\EntityRepository;
 
 class ContactRepository extends EntityRepository
 {
-    public function findByMailingListsIds($mailingListIds)
+    public function findBySibscribedOnMailingLists($mailingListIds)
     {
         $queryBuilder = $this->createQueryBuilder('contact');
         $queryBuilder
@@ -26,7 +26,7 @@ class ContactRepository extends EntityRepository
         return  $queryBuilder->getQuery()->getSingleScalarResult();
     }
 
-    public function findByMailingListIdsPaginated($mailingListIds, $paginationQuery = null)
+    public function findBySibscribedOnMailingListsIdsPaginated($mailingListIds, $paginationQuery = null)
     {
         $queryBuilder = $this->createQueryBuilder('contact');
         $queryBuilder

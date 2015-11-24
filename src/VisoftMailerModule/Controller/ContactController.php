@@ -34,13 +34,8 @@ class ContactController extends BaseController
 
 	public function contactsEnterAction()
 	{
-        $request = $this->getRequest();
-        if (!$request instanceof ConsoleRequest)
-            throw new \RuntimeException('You can only use from a console');
-        $statusId = $request->getParam('statusid', false);
-        if(!$statusId)
-            throw new \RuntimeException('Status id not specified');
-        $process = $this->processingService->createBackgroundProcess("contactsEnter", $statusId);
+        $status = $this->getStatusFromRoute();
+        $process = $this->processingService->createBackgroundProcess("contactsEnter", $status->getId());
         $process->getWorker()->addFunction('contactsEnter', function (\GearmanJob $job) {
             $this->contactService->persist($job->workload());
             return true;
@@ -50,15 +45,23 @@ class ContactController extends BaseController
 
     public function contactsExportAction()
     {
-        $request = $this->getRequest();
-        if (!$request instanceof ConsoleRequest)
-            throw new \RuntimeException('You can only use from a console');
-        $statusId = $request->getParam('statusid', false);
-        if(!$statusId)
-            throw new \RuntimeException('Status id not specified');
-        $process = $this->processingService->createBackgroundProcess("contactsExport", $statusId);
+        $status = $this->getStatusFromRoute();
+        $process = $this->processingService->createBackgroundProcess("contactsExport", $status->getId());
         $process->getWorker()->addFunction('contactsExport', function (\GearmanJob $job) {
             $this->contactService->dump($job->workload());
+            return true;
+        });
+        $process->run();
+    }
+
+    public function contactsTruncateAction()
+    {
+        $status = $this->getStatusFromRoute();
+        $process = $this->processingService->createBackgroundProcess("contactsTruncate", $status->getId());
+        $process->getWorker()->addFunction('contactsTruncate', function (\GearmanJob $job) {
+            $status = $this->contactService->processStarted($job->workload());
+            $this->contactService->truncate($status);
+            $this->contactService->processCompleted($status);
             return true;
         });
         $process->run();
@@ -69,12 +72,24 @@ class ContactController extends BaseController
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {
             $statusId = $this->params()->fromRoute('entityId');
-            $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\Status')->findOneBy(['id' => $statusId]);
+            $status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
             if($status->getState() === 2)
                 return new JsonModel(['code' => true]);
             else
                 return new JsonModel(['code' => false]);
         }
         return $this->notFoundAction();
+    }
+
+    private function getStatusFromRoute()
+    {
+        $request = $this->getRequest();
+        if (!$request instanceof ConsoleRequest)
+            throw new \RuntimeException('You can only use from a console');
+        $statusId = $request->getParam('statusid', false);
+        if(!$statusId)
+            throw new \RuntimeException('Status id not specified');
+        $status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
+        return $status;
     }
 }
