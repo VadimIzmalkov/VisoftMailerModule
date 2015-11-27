@@ -173,9 +173,9 @@ class ContactService implements ContactServiceInterface
         $this->entityManager->flush();
         $statusId = $status->getId();
         // command to run exporting in separated process
-        $logWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+        $logWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_contacts_export_' . $now->format("Y-m-d_H-i-s") . '.log';
-        $errWorkerFilePath = $this->moduleOptions->getContactLogDir() 
+        $errWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_contacts_export_' . $now->format("Y-m-d_H-i-s") . '.err';
         $shell = 'php public/index.php contacts-export ' 
             . $statusId 
@@ -186,10 +186,8 @@ class ContactService implements ContactServiceInterface
         return $status;
     }
 
-    public function dump($statusId)
+    public function dump($status)
     {
-        $status = $this->processStart($statusId);
-        // begin export
         $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getMailingList()->getId());
         $csvFilePath = $status->getOutputFilePath();
         $line = "Email, State \n";
@@ -197,7 +195,7 @@ class ContactService implements ContactServiceInterface
             $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         $line = null;
-        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($mailingListId);
+        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($status->getMailingList()->getId());
         foreach ($contactsUnsubscribed as $contact) {
             if(isset($contact['stateName']))
                 $state = $contact['stateName'];
@@ -250,6 +248,11 @@ class ContactService implements ContactServiceInterface
         $this->entityManager->flush();
     }
 
+    public function search($searchBy)
+    {
+        return $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->search($searchBy);
+    }
+
     public function processStarted($statusId)
     {
         $status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
@@ -294,5 +297,29 @@ class ContactService implements ContactServiceInterface
     	$time = microtime(true);
 		$micro = sprintf("%06d",($time - floor($time)) * 1000000);
 		return new \DateTime(date('Y-m-d H:i:s.' . $micro, $time));
+    }
+
+    public function downloadExportCsv($mailingListId)
+    {
+        $mailingList = $this->entityManager->getRepository('VisoftMailerModule\Entity\MailingListInterface')->findOneBy(['id' => $mailingListId]);
+        $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusContactExport')->findOneBy(['mailingList' => $mailingList], ['createdAt' => 'DESC']);
+        $outputFilePath = $status->getOutputFilePath();
+        $fileName = end(explode('/', $outputFilePath));
+        if (file_exists($outputFilePath)) {
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename=' . $fileName);
+            header('Content-Transfer-Encoding: binary');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            // header('Content-Length: ' . filesize($filename)); // $file));
+            ob_clean();
+            flush();
+            // readfile($file);
+            readfile($file);
+        } else {
+            echo 'The file $fileName does not exist';
+        }
     }
 }

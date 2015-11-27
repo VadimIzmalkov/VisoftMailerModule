@@ -48,7 +48,9 @@ class ContactController extends BaseController
         $status = $this->getStatusFromRoute();
         $process = $this->processingService->createBackgroundProcess("contactsExport", $status->getId());
         $process->getWorker()->addFunction('contactsExport', function (\GearmanJob $job) {
-            $this->contactService->dump($job->workload());
+            $status = $this->contactService->processStarted($job->workload());
+            $this->contactService->dump($status);
+            $this->contactService->processCompleted($status);
             return true;
         });
         $process->run();
