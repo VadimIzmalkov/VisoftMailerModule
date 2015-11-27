@@ -304,7 +304,11 @@ class ContactService implements ContactServiceInterface
         $mailingList = $this->entityManager->getRepository('VisoftMailerModule\Entity\MailingListInterface')->findOneBy(['id' => $mailingListId]);
         $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusContactExport')->findOneBy(['mailingList' => $mailingList], ['createdAt' => 'DESC']);
         $outputFilePath = $status->getOutputFilePath();
+        // var_dump($outputFilePath);
+        // die();
         $fileName = end(explode('/', $outputFilePath));
+        // var_dump($fileName);
+        // die();
         if (file_exists($outputFilePath)) {
             header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
@@ -313,11 +317,10 @@ class ContactService implements ContactServiceInterface
             header('Expires: 0');
             header('Cache-Control: must-revalidate');
             header('Pragma: public');
-            // header('Content-Length: ' . filesize($filename)); // $file));
+            // header('Content-Length: ' . filesize($filename));
             ob_clean();
             flush();
-            // readfile($file);
-            readfile($file);
+            readfile($outputFilePath);
         } else {
             echo 'The file $fileName does not exist';
         }
