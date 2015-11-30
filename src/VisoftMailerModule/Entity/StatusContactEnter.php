@@ -3,6 +3,7 @@
 namespace VisoftMailerModule\Entity;
 
 use Doctrine\ORM\Mapping as ORM,
+    Doctrine\ORM\PersistentCollection,
 	Doctrine\Common\Collections\ArrayCollection;
 
 use VisoftBaseModule\Entity\UserInterface,
@@ -86,13 +87,16 @@ class StatusContactEnter extends Status
         return $this;
     }
     public function addMailingLists($mailingLists) {
-        if(is_array($mailingLists) || $mailingLists instanceof Traversable || $mailingLists instanceof ArrayCollection)
+        if(is_array($mailingLists) 
+            || $mailingLists instanceof Traversable 
+            || $mailingLists instanceof ArrayCollection
+            || $mailingLists instanceof PersistentCollection)
             foreach ($mailingLists as $mailingList) 
                 $this->mailingLists->add($mailingList);
         elseif($mailingLists instanceof MailingListInterface)
             $this->mailingLists->add($mailingLists);
         else 
-            throw new \Exception("$mailingLists is expected to be instance of MailingListInterface or Traversable", 1);
+            throw new \Exception("mailingLists is expected to be instance of MailingListInterface or Traversable", 1);
         return $this;
     }
     public function removeMailingList(MailingListInterface $mailingList) {
