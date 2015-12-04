@@ -36,13 +36,13 @@ return [
                         ],
                     ]
                 ],
-                'send-campaign' => [
+                'send-mailing' => [
                     'options' => [
-                        'route' => 'send-campaign <statusid>',
+                        'route' => 'send-mailing <statusid>',
                         'defaults' => [
                             '__NAMESPACE__' => 'VisoftMailerModule\Controller',
                             'controller'    => 'mailer',
-                            'action'        => 'send-campaign',
+                            'action'        => 'send-mailing',
                         ],
                     ]
                 ],

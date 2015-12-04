@@ -61,19 +61,8 @@ class ContactService implements ContactServiceInterface
         return $status;
 	}
 
-	public function persist($statusId)
+	public function persist($status)
 	{
-		// update status - persist started
-       	$status = $this->entityManager->getRepository('VisoftMailerModule\Entity\Status')->findOneBy(['id' => $statusId]);
-       	if(empty($status)) {
-       		echo "status not exists";
-       		return false;
-       	}
-        $status->setStartedAt(new \Datetime());
-        $status->setState(1);
-        $this->entityManager->persist($status);
-        $this->entityManager->flush();
-
        	// logging
        	$reportFilePath = $status->getOutputFilePath();
        	$message = "====================  PERSIST CONTACTS REPORT  ====================\n";
@@ -141,8 +130,6 @@ class ContactService implements ContactServiceInterface
                 $emailsProcessed = [];
             }
         }
-        $status->setFinishedAt(new \Datetime());
-        $status->setState(2);
         $status->setNumContacts($countContacts);
         $status->setNumContactsAdded($countContactAdded);
         $status->setNumContactsExist($countContactExist);

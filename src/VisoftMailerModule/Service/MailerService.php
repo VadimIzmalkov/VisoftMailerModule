@@ -35,7 +35,7 @@ class MailerService implements MailerServiceInterface
 		$now = new \DateTime();
 		$authenticatedUser = $this->authenticationService->getIdentity();
 		$status = new Entity\StatusMailer();
-		$status->setcampaign($campaign);
+		$status->setCampaign($campaign);
 		$this->entityManager->persist($status);
         $this->entityManager->flush();
         $statusId = $status->getId();
@@ -53,45 +53,69 @@ class MailerService implements MailerServiceInterface
         return $status;
 	}
 
-	public function send($statusId)
-	{
-		// check if status exist
-       	$status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
-       	if(empty($status)) {
-       		echo "status not exists";
-       		return false;
-       	}
-
-       	// update state status
-        $status->setStartedAt(new \Datetime());
-        $status->setState(2);
+    public function sendMailing($mailing)
+    {
+        $now = new \DateTime();
+        $authenticatedUser = $this->authenticationService->getIdentity();
+        $status = new Entity\StatusMailing();
+        $status->setMailing($mailing);
+        $status->setCreatedBy($authenticatedUser);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
+        $statusId = $status->getId();
+        // command to run exporting in separated process
+        $logWorkerFilePath = $this->moduleOptions->getLogDir() 
+            . '/worker_send_mailing_' . $now->format("Y-m-d_H-i-s") . '.log';
+        $errWorkerFilePath = $this->moduleOptions->getLogDir() 
+            . '/worker_send_mailing_' . $now->format("Y-m-d_H-i-s") . '.err';
+        $shell = 'php public/index.php send-mailing ' 
+            . $statusId 
+            . ' >' . $logWorkerFilePath 
+            . ' 2>' . $errWorkerFilePath 
+            . ' &';
+        shell_exec($shell);
+        return $status;
 
+    }
+
+    public function sendNotification($notification)
+    {
+
+    }
+
+	public function send($status)
+	{
         // start sending
-        $campaign = $status->getCampaign();
-        $mailingListsIds = $campaign->getMailingLists()->map(function($entity) { return $entity->getId(); })->toArray();
-        $contacts = $this->entityManager->getRepository('Application\Entity\Contact')->findByMailingListsIds($mailingListsIds);
+        $mailing = $status->getMailing();
+        // $mailingListsIds = $campaign->getMailingLists()->map(function($entity) { return $entity->getId(); })->toArray();
+        // $contacts = $this->entityManager->getRepository('Application\Entity\Contact')->findByMailingListsIds($mailingListsIds);
+        $recipients = json_decode($mailing->getRecipients(), true);
         $numSent = 0;
-        foreach ($contacts as $contact) {
-        	if(!empty($recipientState = $this->entityManager->getRepository('VisoftMailerModule\Entity\RecipientState')->findOneBy(['email' => $contact['email'], 'campaign' => $campaign])))
-        		continue;
-        	$recipientState = new Entity\RecipientState();
-            $recipientState->setEmail($contact['email']);
-            $recipientState->setCampaign($campaign);
+        foreach ($recipients as $recipient) {
+        	// if(!empty($recipientState = $this->entityManager->getRepository('VisoftMailerModule\Entity\RecipientState')->findOneBy(['email' => $recipient['email'], 'campaign' => $campaign])))
+        	// 	continue;
+        	// $recipientState = new Entity\RecipientState();
+         //    $recipientState->setEmail($recipient['email']);
+         //    $recipientState->setMailing($mailing);
 			
 			// set Ac Mailer
-			$this->acMailService->setBody($campaign->getEmailTemplate()->getBodyText());
-            $this->acMailService->setSubject($campaign->getSubject());
+            $this->acMailService->setSubject($mailing->getSubject());
+            $this->acMailService->setTemplate($mailing->getEmailTemplatePath(), [
+                'preview' => false,
+                'host' => 'http://fryday.net',
+                'recipientToken' => $recipient['registrationToken'],
+                'recipientFullName' => $recipient['fullName'],
+                'mailing' => $mailing,
+            ]);
             $message = $this->acMailService->getMessage();
-            $message->setTo($contact['email']);
+            $message->setTo($recipient['email']);
             $result = $this->acMailService->send();
             if (!$result->isValid()) {
                 if ($result->hasException())
                     echo sprintf('An error occurred. Exception: \n %s', $result->getException()->getTraceAsString());
                 else
                     echo sprintf('An error occurred. Message: %s', $result->getMessage());    
-                $emailState->setState(4);       
+                // $emailState->setState(4);       
             }
         }
 	}
@@ -118,6 +142,29 @@ class MailerService implements MailerServiceInterface
     public function getOptions()
     {
         return $this->moduleOptions;
+    }
+
+    public function processStarted($statusId)
+    {
+        $status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
+        if(empty($status)) {
+            echo "status not exists";
+            return false;
+        }
+        $status->setStartedAt(new \Datetime());
+        $status->setState(1);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
+        return $status;
+    }
+
+    public function processCompleted($status)
+    {
+        $status->setFinishedAt(new \Datetime());
+        $status->setState(2);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
+        return $status;
     }
 
     protected function checkDir($path)

@@ -17,7 +17,9 @@ use VisoftBaseModule\Entity\UserInterface;
  *  "status_contact_enter" = "StatusContactEnter",
  *  "status_contact_export" = "StatusContactExport",
  *  "status_contact_truncate" = "StatusContactTruncate",
- *  "status_mailer" = "StatusMailer",
+ *  "status_mailer_campaign" = "StatusMailerCampaign",
+ *  "status_mailing" = "StatusMailing",
+ *  "status_mailer_notification" = "StatusMailerNotification",
  * } )
  */
 class Status

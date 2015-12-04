@@ -10,11 +10,11 @@ use VisoftBaseModule\Entity\UserInterface;
 /**
  * @ORM\Entity
  */
-class StatusMailer extends Status
+class StatusMailerCampaign extends Status
 {
     /**
-     * @var Campaign
-     * @ORM\OneToOne(targetEntity="VisoftMailerModule\Entity\Campaign")
+     * @var MailingCampaign
+     * @ORM\OneToOne(targetEntity="VisoftMailerModule\Entity\MailingCampaign")
      * @ORM\JoinColumn(name="campaign_id", referencedColumnName="id")
      */
     protected $campaign;

@@ -31,19 +31,28 @@ class MailerController extends BaseController
 		$this->processingService = $processingService;
 	}
 
-	public function sendCampaignAction()
+	public function sendMailingAction()
 	{
+        $status = $this->getStatusFromRoute();
+        $process = $this->processingService->createBackgroundProcess("sendMailing", $status->getId());
+        $process->getWorker()->addFunction('sendMailing', function (\GearmanJob $job) {
+        	$status = $this->mailerService->processStarted($job->workload());
+            $this->mailerService->send($status);
+            $this->mailerService->processCompleted($status);
+            return true;
+        });
+        $process->run();
+	}
+
+    private function getStatusFromRoute()
+    {
         $request = $this->getRequest();
         if (!$request instanceof ConsoleRequest)
             throw new \RuntimeException('You can only use from a console');
         $statusId = $request->getParam('statusid', false);
         if(!$statusId)
             throw new \RuntimeException('Status id not specified');
-        $process = $this->processingService->createBackgroundProcess("sendCampaign", $statusId);
-        $process->getWorker()->addFunction('sendCampaign', function (\GearmanJob $job) {
-            $this->mailerService->send($job->workload());
-            return true;
-        });
-        $process->run();
-	}
+        $status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
+        return $status;
+    }
 }
