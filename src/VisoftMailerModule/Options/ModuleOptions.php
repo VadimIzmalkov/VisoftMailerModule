@@ -6,7 +6,8 @@ use Zend\Stdlib\AbstractOptions;
 
 class ModuleOptions extends AbstractOptions
 {
-	protected $dataModuleDir;
+    // directories for storing intermediate data 
+	protected $dataModuleDir; 
     protected $logDir;
     protected $contactExportedCsvDir;
     protected $contactReportsDir;

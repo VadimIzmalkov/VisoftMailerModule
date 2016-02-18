@@ -16,15 +16,21 @@ class StatusContactEnter extends Status
 {	
     /**
      * @var text
-     * @ORM\Column(name="emails_string", type="text", nullable=true)
+     * @ORM\Column(name="contacts_json", type="text", nullable=true)
      */
-    protected $emailsString;
+    protected $contactsJson;
 
     /**
      * @var integer
      * @ORM\Column(name="num_contacts", type="integer", nullable=true)
      */
     protected $numContacts;
+
+    /**
+     * @var integer
+     * @ORM\Column(name="num_contacts_processed", type="integer", nullable=true)
+     */
+    protected $numContactsProcessed;
 
     /**
      * @var integer
@@ -57,9 +63,9 @@ class StatusContactEnter extends Status
         $this->mailingLists = new ArrayCollection();
     }
 
-    public function getEmailsString() { return $this->emailsString; }
-    public function setEmailsString($emailsString) {
-    	$this->emailsString = $emailsString;
+    public function getContactsJson() { return $this->contactsJson; }
+    public function setContactsJson($contactsJson) {
+    	$this->contactsJson = $contactsJson;
     	return $this;
     }
 
@@ -67,6 +73,12 @@ class StatusContactEnter extends Status
     public function setNumContacts($numContacts) {
     	$this->numContacts = $numContacts;
     	return $this;
+    }
+
+    public function getNumContactsProcessed() { return $this->numContactsProcessed; }
+    public function setNumContactsProcessed($numContactsProcessed) {
+        $this->numContactsProcessed = $numContactsProcessed;
+        return $this;
     }
 
     public function getNumContactsAdded() { return $this->numContactsAdded; }
