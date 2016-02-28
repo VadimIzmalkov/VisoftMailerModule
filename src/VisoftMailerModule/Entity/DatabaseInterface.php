@@ -2,7 +2,7 @@
 
 namespace VisoftMailerModule\Entity;
 
-interface MailingInterface 
+interface DatabaseInterface 
 {
 	
 }

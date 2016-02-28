@@ -78,11 +78,6 @@ class MailerService implements MailerServiceInterface
 
     }
 
-    public function sendNotification($notification)
-    {
-
-    }
-
 	public function send($status)
 	{
         // start sending

@@ -15,11 +15,9 @@ use VisoftBaseModule\Entity\UserInterface;
  * @ORM\DiscriminatorMap( {
  *  "status" = "Status",
  *  "status_contact_enter" = "StatusContactEnter",
- *  "status_contact_export" = "StatusContactExport",
- *  "status_contact_truncate" = "StatusContactTruncate",
- *  "status_mailer_campaign" = "StatusMailerCampaign",
+ *  "status_database_export" = "StatusDatabaseExport",
+ *  "status_database_truncate" = "StatusDatabaseTruncate",
  *  "status_mailing" = "StatusMailing",
- *  "status_mailer_notification" = "StatusMailerNotification",
  * } )
  */
 class Status
@@ -65,7 +63,7 @@ class Status
     /**
      * @var UserInterface
      * @ORM\ManyToOne(targetEntity="VisoftBaseModule\Entity\UserInterface")
-     * @ORM\JoinColumn(name="created_by_id", referencedColumnName="id", nullable=true,  unique=false)
+     * @ORM\JoinColumn(name="created_by_id", referencedColumnName="id", nullable=true,  unique=false, onDelete="SET NULL")
      */
     protected $createdBy;
 
@@ -74,6 +72,30 @@ class Status
      * @ORM\Column(name="output_file_path", type="string", nullable=true)
      */
     protected $outputFilePath;
+
+    /**
+     * @var text
+     * @ORM\Column(name="contacts_json", type="text", nullable=true)
+     */
+    protected $contactsJson;
+
+    /**
+     * @var text
+     * @ORM\Column(name="contacts_processed_json", type="text", nullable=true)
+     */
+    protected $contactsProcessedJson;
+
+    /**
+     * @var integer
+     * @ORM\Column(name="num_total_contacts", type="integer", nullable=true)
+     */
+    protected $numTotalContacts;
+
+    /**
+     * @var integer
+     * @ORM\Column(name="num_processed_contacts", type="integer", nullable=true)
+     */
+    protected $numProcessedContacts;
 
     public function __construct()
     {
@@ -116,5 +138,29 @@ class Status
     public function setFinishedAt($finishedAt) {
     	$this->finishedAt = $finishedAt;
     	return $this;
+    }
+
+    public function getContactsJson() { return $this->contactsJson; }
+    public function setContactsJson($contactsJson) {
+        $this->contactsJson = $contactsJson;
+        return $this;
+    }
+
+    public function getContactsProcessedJson() { return $this->contactsProcessedJson; }
+    public function setContactsProcessedJson($contactsProcessedJson) {
+        $this->contactsProcessedJson = $contactsProcessedJson;
+        return $this;
+    }
+
+    public function getNumTotalContacts() { return $this->numTotalContacts; }
+    public function setNumTotalContacts($numTotalContacts) {
+        $this->numTotalContacts = $numTotalContacts;
+        return $this;
+    }
+
+    public function getNumProcessedContacts() { return $this->numProcessedContacts; }
+    public function setNumProcessedContacts($numProcessedContacts) {
+        $this->numProcessedContacts = $numProcessedContacts;
+        return $this;
     }
 }

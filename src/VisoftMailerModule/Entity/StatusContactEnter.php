@@ -7,31 +7,13 @@ use Doctrine\ORM\Mapping as ORM,
 	Doctrine\Common\Collections\ArrayCollection;
 
 use VisoftBaseModule\Entity\UserInterface,
-    VisoftMailerModule\Entity\MailingListInterface;
+    VisoftMailerModule\Entity\DatabaseInterface;
 
 /**
  * @ORM\Entity
  */
 class StatusContactEnter extends Status
 {	
-    /**
-     * @var text
-     * @ORM\Column(name="contacts_json", type="text", nullable=true)
-     */
-    protected $contactsJson;
-
-    /**
-     * @var integer
-     * @ORM\Column(name="num_contacts", type="integer", nullable=true)
-     */
-    protected $numContacts;
-
-    /**
-     * @var integer
-     * @ORM\Column(name="num_contacts_processed", type="integer", nullable=true)
-     */
-    protected $numContactsProcessed;
-
     /**
      * @var integer
      * @ORM\Column(name="num_contacts_added", type="integer", nullable=true)
@@ -47,13 +29,13 @@ class StatusContactEnter extends Status
     /**
      * @var ArrayCollection
      *
-     * @ORM\ManyToMany(targetEntity="VisoftMailerModule\Entity\MailingListInterface")
-     * @ORM\JoinTable(name="visoft_mailer_statuses_contacts_enter_to_mailing_lists",
+     * @ORM\ManyToMany(targetEntity="VisoftMailerModule\Entity\DatabaseInterface")
+     * @ORM\JoinTable(name="visoft_mailer_statuses_contacts_enter_to_databases",
      * joinColumns={@ORM\JoinColumn(name="status_id", referencedColumnName="id", onDelete="CASCADE")},
      * inverseJoinColumns={@ORM\JoinColumn(name="mailing_list_id", referencedColumnName="id", unique=false)}
      * )
      */
-    protected $mailingLists;
+    protected $databases;
 
     public function __construct() {
     	parent::__construct();
@@ -63,23 +45,7 @@ class StatusContactEnter extends Status
         $this->mailingLists = new ArrayCollection();
     }
 
-    public function getContactsJson() { return $this->contactsJson; }
-    public function setContactsJson($contactsJson) {
-    	$this->contactsJson = $contactsJson;
-    	return $this;
-    }
 
-    public function getNumContacts() { return $this->numContacts; }
-    public function setNumContacts($numContacts) {
-    	$this->numContacts = $numContacts;
-    	return $this;
-    }
-
-    public function getNumContactsProcessed() { return $this->numContactsProcessed; }
-    public function setNumContactsProcessed($numContactsProcessed) {
-        $this->numContactsProcessed = $numContactsProcessed;
-        return $this;
-    }
 
     public function getNumContactsAdded() { return $this->numContactsAdded; }
     public function setNumContactsAdded($numContactsAdded) {
@@ -94,7 +60,7 @@ class StatusContactEnter extends Status
     }
 
     public function getMailingLists() { return $this->mailingLists; }
-    public function addMailingList(MailingListInterface $mailingList) {
+    public function addMailingList(DatabaseInterface $mailingList) {
         $this->mailingLists->add($mailingList);
         return $this;
     }
@@ -105,13 +71,13 @@ class StatusContactEnter extends Status
             || $mailingLists instanceof PersistentCollection)
             foreach ($mailingLists as $mailingList) 
                 $this->mailingLists->add($mailingList);
-        elseif($mailingLists instanceof MailingListInterface)
+        elseif($mailingLists instanceof DatabaseInterface)
             $this->mailingLists->add($mailingLists);
         else 
             throw new \Exception("mailingLists is expected to be instance of MailingListInterface or Traversable", 1);
         return $this;
     }
-    public function removeMailingList(MailingListInterface $mailingList) {
+    public function removeMailingList(DatabaseInterface $mailingList) {
         $this->mailingLists->removeElement($mailingList);
         return $this;
     }
