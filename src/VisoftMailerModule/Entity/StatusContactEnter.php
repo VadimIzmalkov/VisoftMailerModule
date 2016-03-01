@@ -32,7 +32,7 @@ class StatusContactEnter extends Status
      * @ORM\ManyToMany(targetEntity="VisoftMailerModule\Entity\DatabaseInterface")
      * @ORM\JoinTable(name="visoft_mailer_statuses_contacts_enter_to_databases",
      * joinColumns={@ORM\JoinColumn(name="status_id", referencedColumnName="id", onDelete="CASCADE")},
-     * inverseJoinColumns={@ORM\JoinColumn(name="mailing_list_id", referencedColumnName="id", unique=false)}
+     * inverseJoinColumns={@ORM\JoinColumn(name="database_id", referencedColumnName="id", unique=false)}
      * )
      */
     protected $databases;
@@ -42,7 +42,7 @@ class StatusContactEnter extends Status
     	$this->numContacts = 0;
     	$this->numContactsAdded = 0;
     	$this->numContactsExist = 0;
-        $this->mailingLists = new ArrayCollection();
+        $this->databases = new ArrayCollection();
     }
 
 
@@ -59,31 +59,31 @@ class StatusContactEnter extends Status
     	return $this;
     }
 
-    public function getMailingLists() { return $this->mailingLists; }
+    public function getMailingLists() { return $this->databases; }
     public function addMailingList(DatabaseInterface $mailingList) {
-        $this->mailingLists->add($mailingList);
+        $this->databases->add($mailingList);
         return $this;
     }
-    public function addMailingLists($mailingLists) {
-        if(is_array($mailingLists) 
-            || $mailingLists instanceof Traversable 
-            || $mailingLists instanceof ArrayCollection
-            || $mailingLists instanceof PersistentCollection)
-            foreach ($mailingLists as $mailingList) 
-                $this->mailingLists->add($mailingList);
-        elseif($mailingLists instanceof DatabaseInterface)
-            $this->mailingLists->add($mailingLists);
+    public function addMailingLists($databases) {
+        if(is_array($databases) 
+            || $databases instanceof Traversable 
+            || $databases instanceof ArrayCollection
+            || $databases instanceof PersistentCollection)
+            foreach ($databases as $mailingList) 
+                $this->databases->add($mailingList);
+        elseif($databases instanceof DatabaseInterface)
+            $this->databases->add($databases);
         else 
             throw new \Exception("mailingLists is expected to be instance of MailingListInterface or Traversable", 1);
         return $this;
     }
     public function removeMailingList(DatabaseInterface $mailingList) {
-        $this->mailingLists->removeElement($mailingList);
+        $this->databases->removeElement($mailingList);
         return $this;
     }
-    public function removeMailingLists($mailingLists) {
-        foreach ($mailingLists as $mailingList) 
-            $this->mailingLists->removeElement($mailingList);
+    public function removeMailingLists($databases) {
+        foreach ($databases as $mailingList) 
+            $this->databases->removeElement($mailingList);
         return $this;
     }
 }

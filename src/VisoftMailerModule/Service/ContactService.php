@@ -38,8 +38,8 @@ class ContactService implements ContactServiceInterface
         $identity = $this->authenticationService->getIdentity();
         $status = new Entity\StatusContactEnter();
         if(!empty($identity))
-            $status->setCreatedBy($authenticatedUser);
-        $status->setNumContacts(count($contatcsArray));
+            $status->setCreatedBy($identity);
+        $status->setNumTotalContacts(count($contatcsArray));
         $status->setContactsJson(json_encode($contatcsArray));
         $status->addMailingLists($mailingLists);
         $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.text';

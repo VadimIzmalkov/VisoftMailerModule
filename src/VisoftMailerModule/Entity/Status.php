@@ -93,9 +93,9 @@ class Status
 
     /**
      * @var integer
-     * @ORM\Column(name="num_processed_contacts", type="integer", nullable=true)
+     * @ORM\Column(name="num_contacts_processed", type="integer", nullable=true)
      */
-    protected $numProcessedContacts;
+    protected $numContactsProcessed;
 
     public function __construct()
     {
@@ -158,9 +158,9 @@ class Status
         return $this;
     }
 
-    public function getNumProcessedContacts() { return $this->numProcessedContacts; }
-    public function setNumProcessedContacts($numProcessedContacts) {
-        $this->numProcessedContacts = $numProcessedContacts;
+    public function getNumContactsProcessed() { return $this->numContactsProcessed; }
+    public function setNumContactsProcessed($numContactsProcessed) {
+        $this->numContactsProcessed = $numContactsProcessed;
         return $this;
     }
 }
