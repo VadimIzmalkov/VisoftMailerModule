@@ -151,13 +151,13 @@ class ContactService implements ContactServiceInterface
    		file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
 	}
 
-    public function export(Entity\MailingListInterface $mailingList)
+    public function export(Entity\DatabaseInterface $database)
     {
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
-        $status = new Entity\StatusContactExport($authenticatedUser);
+        $status = new Entity\StatusDatabaseExport($authenticatedUser);
         $status->setState(0);
-        $status->setMailingList($mailingList);
+        $status->setDatabase($database);
         $csvFileName = 'contacts_export_' . $now->format('d-m-Y_H-i-s') . '.csv';
         $csvFilePath = $this->moduleOptions->getContactExportedCsvDir() . '/' . $csvFileName;
         $status->setOutputFilePath($csvFilePath);
@@ -180,7 +180,7 @@ class ContactService implements ContactServiceInterface
 
     public function dump($status)
     {
-        $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getMailingList()->getId());
+        $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getDatabase()->getId());
         $csvFilePath = $status->getOutputFilePath();
         $line = null;
         foreach ($contactsSubscribed as $contact) {
@@ -193,7 +193,7 @@ class ContactService implements ContactServiceInterface
             $line .= implode(',', $contact) . "\n";
             // $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
         }
-        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($status->getMailingList()->getId());
+        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($status->getDatabase()->getId());
         if(!empty($contactsUnsubscribed))   {
             $line .= "\n" . "Unsubscribed" . "\n";
             foreach ($contactsUnsubscribed as $contact) {
@@ -303,8 +303,8 @@ class ContactService implements ContactServiceInterface
 
     public function downloadExportCsv($mailingListId)
     {
-        $mailingList = $this->entityManager->getRepository('VisoftMailerModule\Entity\MailingListInterface')->findOneBy(['id' => $mailingListId]);
-        $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusContactExport')->findOneBy(['mailingList' => $mailingList], ['createdAt' => 'DESC']);
+        $mailingList = $this->entityManager->getRepository('VisoftMailerModule\Entity\DatabaseInterface')->findOneBy(['id' => $mailingListId]);
+        $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusDatabaseExport')->findOneBy(['database' => $mailingList], ['createdAt' => 'DESC']);
         $outputFilePath = $status->getOutputFilePath();
         // var_dump($outputFilePath);
         // die();
