@@ -80,4 +80,13 @@ class Module
             ),
         );
     }
+
+    public function getControllerPluginConfig()
+    {
+        return array(
+            'invokables' => [
+                'detectCsvFileDelimiter' => 'VisoftMailerModule\Controller\Plugin\DetectCsvFileDelimiter',
+            ],
+        );
+    }
 }

@@ -30,31 +30,46 @@ class ContactService implements ContactServiceInterface
 		$this->checkDir($this->moduleOptions->getLogDir());
         $this->checkDir($this->moduleOptions->getContactReportsDir());
         $this->checkDir($this->moduleOptions->getContactExportedCsvDir());
+        $this->checkDir($this->moduleOptions->getContactEnterJsonDir());
 	}
 
-	public function enter($mailingLists, array $contatcsArray)
+	public function enter($mailingLists, array $contactsArray)
 	{
-        $now = new \DateTime();
+        // convertinf array to json 
+        $contactsTotal = count($contactsArray);
+        $contactsJson = json_encode($contactsArray);
+        $contactsJsonFilePath = $this->moduleOptions->getContactEnterJsonDir() . '/' . md5(uniqid(mt_rand(), true)) . '.json';
+        // saving json to file
+        file_put_contents($contactsJsonFilePath, $contactsJson);
+
+        // $json = file_get_contents($contactsJsonFilePath);
+        // // var_dump($json);
+        // unset($contactsArray);
+        // var_dump(json_decode($json, true));
+        // die('fff');
+        
+        // create and set status entity
         $identity = $this->authenticationService->getIdentity();
         $status = new Entity\StatusContactEnter();
         if(!empty($identity))
             $status->setCreatedBy($identity);
-        $status->setNumTotalContacts(count($contatcsArray));
-        $status->setContactsJson(json_encode($contatcsArray));
+        $status->setNumTotalContacts($contactsTotal);
+        $status->setContactsJsonFilePath($contactsJsonFilePath);
         $status->addMailingLists($mailingLists);
+        $now = new \DateTime();
         $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.text';
         $reportFilePath = $this->moduleOptions->getContactReportsDir() . '/' . $reportFileName;
         $status->setOutputFilePath($reportFilePath);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
-        $statusId = $status->getId();
+
         // command to run exporting in separated process
         $logWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.log';
         $errWorkerFilePath = $this->moduleOptions->getLogDir() 
             . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.err';
         $shell = 'php public/index.php contacts-enter ' 
-            . $statusId 
+            . $status->getId() 
             . ' >' . $logWorkerFilePath 
             . ' 2>' . $errWorkerFilePath 
             . ' &';
@@ -76,8 +91,12 @@ class ContactService implements ContactServiceInterface
        	file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
 
        	// JSON decode
-        $contactsJson = $status->getContactsJson();
+        $contactsJsonFilePath = $status->getContactsJsonFilePath();
+        $contactsJson = file_get_contents($contactsJsonFilePath);
         $contactsArray = json_decode($contactsJson, true);
+        // var_dump($contactsArray);
+        // die('dddd');
+        $uniqueField = $this->moduleOptions->getUniqueField();
         // counters
         $countContactProcessed = 0;
         $countContactAdded = 0;
@@ -86,7 +105,7 @@ class ContactService implements ContactServiceInterface
         $emailsProcessed = []; 
 
         $mailingLists = $status->getMailingLists();
-        $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', 2); // 2 - Not Confirmed
+        $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', $this->moduleOptions->getRecentlyAddedStateId()); // 2 - Not Confirmed
         $subscriberRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', $this->userService->getOptions()->getRoleSubscriberId());
 
         // start to process every contact
@@ -94,16 +113,16 @@ class ContactService implements ContactServiceInterface
             // previously contact not exist
             $contactNotExist = true;
             // check if contact already exist by email
-            if(isset($contactInfo['email'])) {
-                $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy(['email' => $contactInfo['email']]);
+            if(isset($contactInfo[$uniqueField])) {
+                $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
                 // check if contact was precessed but not persist yet
-                $emailProcessed = in_array(strtolower($contactInfo['email']), array_map('strtolower', $emailsProcessed)); 
+                $emailProcessed = in_array(strtolower($contactInfo[$uniqueField]), array_map('strtolower', $emailsProcessed)); 
                 // update flag
                 $contactNotExist = empty($contact) && !$emailProcessed;
                 // contact alraedy in database
                 if(!$contactNotExist) {
-                    $message = "Warning: " . $contactInfo['email'] . " alredy exists and cannot be added \n";
-                    array_push($emailsProcessed, $contactInfo['email']);
+                    $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
+                    array_push($emailsProcessed, $contactInfo[$uniqueField]);
                     file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
                     $countContactExist++;
                 }
@@ -131,6 +150,7 @@ class ContactService implements ContactServiceInterface
                 $status->setNumContactsExist($countContactExist);
                 $this->entityManager->persist($status);
                 $this->entityManager->flush();
+                // $this->entityManager->clear();
                 unset($emailsProcessed);
                 $emailsProcessed = [];
             }
@@ -140,6 +160,7 @@ class ContactService implements ContactServiceInterface
         $status->setNumContactsExist($countContactExist);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
+        // $this->entityManager->clear();
 
         // logging
         $message = "------------------------------------------------------------------- \n";

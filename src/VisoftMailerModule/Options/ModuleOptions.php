@@ -7,31 +7,30 @@ use Zend\Stdlib\AbstractOptions;
 class ModuleOptions extends AbstractOptions
 {
     // directories for storing intermediate data 
-	protected $dataModuleDir; 
-    protected $logDir;
+	protected $rootModuleDir;
+    protected $logDir; 
     protected $contactExportedCsvDir;
     protected $contactReportsDir;
+    protected $contactEnterJsonDir;
 
-    // contact states
-    protected $contactStateUnknown = 1;
-    protected $contactStateNotConfirmed = 2;
-    protected $contactStateConfirmed = 3;
-    protected $contactStateBlocked = 4;
-    protected $contactStateNotValid = 5;
+    protected $uniqueField;
+    protected $recentlyAddedStateId;
+
 
     public function __construct($options)
     {
-    	$this->dataModuleDir = getcwd() . '/data/VisoftMailerModule';
-    	$this->logDir = $this->dataModuleDir . '/log';
-    	$this->contactExportedCsvDir = $this->dataModuleDir . '/contacts/exported-csv';
-        $this->contactReportsDir = $this->dataModuleDir . '/contacts/reports';
+    	$this->rootModuleDir = getcwd() . '/data/VisoftMailerModule';
+    	$this->logDir = $this->rootModuleDir . '/log';
+    	$this->contactExportedCsvDir = $this->rootModuleDir . '/contacts/exported-csv';
+        $this->contactReportsDir = $this->rootModuleDir . '/contacts/reports';
+        $this->contactEnterJsonDir = $this->rootModuleDir . '/contacts/enter-json';
 
     	parent::__construct($options);
     }
 
-    public function getDataModuleDir() { return $this->dataModuleDir; }
-    public function setDataModuleDir($dataModuleDir) { 
-    	$this->dataModuleDir = $dataModuleDir;
+    public function getRootModuleDir() { return $this->rootModuleDir; }
+    public function setRootModuleDir($rootModuleDir) { 
+    	$this->rootModuleDir = $rootModuleDir;
         return $this;
     }
 
@@ -50,6 +49,24 @@ class ModuleOptions extends AbstractOptions
     public function getContactReportsDir() { return $this->contactReportsDir; }
     public function setContactReportsDir($contactReportsDir) { 
         $this->contactReportsDir = $contactReportsDir;
+        return $this;
+    }
+
+    public function getContactEnterJsonDir() { return $this->contactEnterJsonDir; }
+    public function setContactEnterJsonDir($contactEnterJsonDir) { 
+        $this->contactEnterJsonDir = $contactEnterJsonDir;
+        return $this;
+    }
+
+    public function getUniqueField() { return $this->uniqueField; }
+    public function setUniqueField($uniqueField) { 
+        $this->uniqueField = $uniqueField;
+        return $this;
+    }
+
+    public function getRecentlyAddedStateId() { return $this->recentlyAddedStateId; }
+    public function setRecentlyAddedStateId($recentlyAddedStateId) { 
+        $this->recentlyAddedStateId = $recentlyAddedStateId;
         return $this;
     }
 }

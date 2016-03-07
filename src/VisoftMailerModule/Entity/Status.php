@@ -75,9 +75,9 @@ class Status
 
     /**
      * @var text
-     * @ORM\Column(name="contacts_json", type="text", nullable=true)
+     * @ORM\Column(name="contacts_json_file", type="text", nullable=true)
      */
-    protected $contactsJson;
+    protected $contactsJsonFilePath;
 
     /**
      * @var text
@@ -140,9 +140,9 @@ class Status
     	return $this;
     }
 
-    public function getContactsJson() { return $this->contactsJson; }
-    public function setContactsJson($contactsJson) {
-        $this->contactsJson = $contactsJson;
+    public function getContactsJsonFilePath() { return $this->contactsJsonFilePath; }
+    public function setContactsJsonFilePath($contactsJsonFilePath) {
+        $this->contactsJsonFilePath = $contactsJsonFilePath;
         return $this;
     }
 

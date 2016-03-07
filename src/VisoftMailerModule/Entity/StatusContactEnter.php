@@ -29,7 +29,7 @@ class StatusContactEnter extends Status
     /**
      * @var ArrayCollection
      *
-     * @ORM\ManyToMany(targetEntity="VisoftMailerModule\Entity\DatabaseInterface")
+     * @ORM\ManyToMany(targetEntity="VisoftMailerModule\Entity\DatabaseInterface" )
      * @ORM\JoinTable(name="visoft_mailer_statuses_contacts_enter_to_databases",
      * joinColumns={@ORM\JoinColumn(name="status_id", referencedColumnName="id", onDelete="CASCADE")},
      * inverseJoinColumns={@ORM\JoinColumn(name="database_id", referencedColumnName="id", unique=false)}
@@ -86,5 +86,7 @@ class StatusContactEnter extends Status
             $this->databases->removeElement($mailingList);
         return $this;
     }
+
+    public function getDatabases() { return $this->databases; }
 }
 	

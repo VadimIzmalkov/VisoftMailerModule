@@ -4,7 +4,7 @@ namespace VisoftMailerModule\Entity\Repository;
 
 use Doctrine\ORM\EntityRepository; 
 
-class MailingListRepository extends EntityRepository
+class DatabaseRepository extends EntityRepository
 {
     public function getCount()
     {
