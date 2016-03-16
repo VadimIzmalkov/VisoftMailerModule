@@ -57,7 +57,7 @@ class ContactService implements ContactServiceInterface
         $status->setContactsJsonFilePath($contactsJsonFilePath);
         $status->addMailingLists($mailingLists);
         $now = new \DateTime();
-        $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.text';
+        $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.txt';
         $reportFilePath = $this->moduleOptions->getContactReportsDir() . '/' . $reportFileName;
         $status->setOutputFilePath($reportFilePath);
         $this->entityManager->persist($status);

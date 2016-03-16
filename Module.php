@@ -2,7 +2,8 @@
 
 namespace VisoftMailerModule;
 
-use Zend\Mvc\Controller\ControllerManager;
+use Zend\Mvc\Controller\ControllerManager,
+    Zend\Mvc\Controller\PluginManager;
 
 use VisoftMailerModule\Controller,
     VisoftBaseModule\Service as BaseService,
@@ -84,6 +85,15 @@ class Module
     public function getControllerPluginConfig()
     {
         return array(
+            'factories' => [
+                'mailerPlugin' => function(PluginManager $pluginManager) {
+                    $serviceLocator = $pluginManager->getServiceLocator();
+                    $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
+                    $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
+                    $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
+                    return new Controller\Plugin\MailerPlugin($entityManager, $authenticationService, $moduleOptions);
+                }
+            ],
             'invokables' => [
                 'detectCsvFileDelimiter' => 'VisoftMailerModule\Controller\Plugin\DetectCsvFileDelimiter',
             ],

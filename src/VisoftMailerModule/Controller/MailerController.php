@@ -31,11 +31,11 @@ class MailerController extends BaseController
 		$this->processingService = $processingService;
 	}
 
-	public function sendMailingAction()
+	public function sendBulkAction()
 	{
         $status = $this->getStatusFromRoute();
-        $process = $this->processingService->createBackgroundProcess("sendMailing", $status->getId());
-        $process->getWorker()->addFunction('sendMailing', function (\GearmanJob $job) {
+        $process = $this->processingService->createBackgroundProcess("sendBulk", $status->getId());
+        $process->getWorker()->addFunction('sendBulk', function (\GearmanJob $job) {
         	$status = $this->mailerService->processStarted($job->workload());
             $this->mailerService->send($status);
             $this->mailerService->processCompleted($status);

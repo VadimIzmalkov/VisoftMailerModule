@@ -12,6 +12,7 @@ class ModuleOptions extends AbstractOptions
     protected $contactExportedCsvDir;
     protected $contactReportsDir;
     protected $contactEnterJsonDir;
+    protected $mailingContactsJsonDir;
 
     protected $uniqueField;
     protected $recentlyAddedStateId;
@@ -24,6 +25,16 @@ class ModuleOptions extends AbstractOptions
     	$this->contactExportedCsvDir = $this->rootModuleDir . '/contacts/exported-csv';
         $this->contactReportsDir = $this->rootModuleDir . '/contacts/reports';
         $this->contactEnterJsonDir = $this->rootModuleDir . '/contacts/enter-json';
+        $this->mailingContactsJsonDir = $this->rootModuleDir . '/mailing/contacts-json';
+        $this->mailingReportsDir = $this->rootModuleDir . '/mailing/reports';
+
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->rootModuleDir);
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->logDir);
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->contactExportedCsvDir);
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->contactReportsDir);
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->contactEnterJsonDir);
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->mailingContactsJsonDir);
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->mailingReportsDir);
 
     	parent::__construct($options);
     }
@@ -55,6 +66,18 @@ class ModuleOptions extends AbstractOptions
     public function getContactEnterJsonDir() { return $this->contactEnterJsonDir; }
     public function setContactEnterJsonDir($contactEnterJsonDir) { 
         $this->contactEnterJsonDir = $contactEnterJsonDir;
+        return $this;
+    }
+
+    public function getMailingContactsJsonDir() { return $this->mailingContactsJsonDir; }
+    public function setMailingContactsJsonDir($mailingContactsJsonDir) { 
+        $this->mailingContactsJsonDir = $mailingContactsJsonDir;
+        return $this;
+    }
+
+    public function getMailingReportsDir() { return $this->mailingReportsDir; }
+    public function setMailingReportsDir($mailingReportsDir) { 
+        $this->mailingReportsDir = $mailingReportsDir;
         return $this;
     }
 

@@ -12,14 +12,14 @@ class StatusMailing extends Status
 {
     /**
      * @var string
-     * @ORM\Column(name="template_path", type="string", length=255, nullable=true, unique=false)
+     * @ORM\Column(name="email_template", type="string", length=255, nullable=true, unique=false)
      */
-    protected $templatePath;
+    protected $emailTemplate;
     /**
      * @var string
-     * @ORM\Column(name="template_parameters_json", type="string", length=255, nullable=true, unique=false)
+     * @ORM\Column(name="parameters_json", type="string", length=255, nullable=true, unique=false)
      */
-    protected $templateParametersJson;
+    protected $parametersJson;
     /**
      * @var string
      * @ORM\Column(name="subject", type="string", length=255, nullable=true, unique=false)
@@ -44,21 +44,33 @@ class StatusMailing extends Status
     	parent::__construct();
     }
 
-    public function getTemplatePath() { return $this->templatePath; }
-    public function setTemplatePath($templatePath) {
-        $this->templatePath = $templatePath;
+    public function getEmailTemplate() { return $this->emailTemplate; }
+    public function setEmailTemplate($emailTemplate) {
+        $this->emailTemplate = $emailTemplate;
         return $this;
     }
 
-    public function getTemplateParametersJson() { return $this->templateParametersJson; }
-    public function setTemplateParametersJson($templateParametersJson) {
-        $this->templateParametersJson = $templateParametersJson;
+    public function getParametersJson() { return $this->parametersJson; }
+    public function setParametersJson($parametersJson) {
+        $this->parametersJson = $parametersJson;
         return $this;
     }
 
-    public function getMailing() { return $this->mailing; }
-    public function setMailing($mailing) {
-    	$this->mailing = $mailing;
+    public function getSubject() { return $this->subject; }
+    public function setSubject($subject) {
+    	$this->subject = $subject;
     	return $this;
+    }
+
+    public function getNumClicks() { return $this->numClicks; }
+    public function setNumClicks($numClicks) {
+        $this->numClicks = $numClicks;
+        return $this;
+    }
+
+    public function getNumUnsubscribe() { return $this->numUnsubscribe; }
+    public function setNumUnsubscribe($numUnsubscribe) {
+        $this->numUnsubscribe = $numUnsubscribe;
+        return $this;
     }
 }

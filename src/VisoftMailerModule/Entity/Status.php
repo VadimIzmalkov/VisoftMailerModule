@@ -81,9 +81,9 @@ class Status
 
     /**
      * @var text
-     * @ORM\Column(name="contacts_processed_json", type="text", nullable=true)
+     * @ORM\Column(name="contacts_processed_json_file", type="text", nullable=true)
      */
-    protected $contactsProcessedJson;
+    protected $contactsProcessedJsonFilePath;
 
     /**
      * @var integer
@@ -146,9 +146,9 @@ class Status
         return $this;
     }
 
-    public function getContactsProcessedJson() { return $this->contactsProcessedJson; }
-    public function setContactsProcessedJson($contactsProcessedJson) {
-        $this->contactsProcessedJson = $contactsProcessedJson;
+    public function getContactsProcessedJsonFilePath() { return $this->contactsProcessedJsonFilePath; }
+    public function setContactsProcessedJsonFilePath($contactsProcessedJsonFilePath) {
+        $this->contactsProcessedJsonFilePath = $contactsProcessedJsonFilePath;
         return $this;
     }
 
