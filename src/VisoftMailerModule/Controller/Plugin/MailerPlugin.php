@@ -8,12 +8,14 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
 	protected $authenticationService;
 	protected $entityManager;
     protected $moduleOptions;
+    protected $contactService;
 
-	public function __construct($entityManager, $authenticationService, $moduleOptions)
+	public function __construct($entityManager, $authenticationService, $moduleOptions, $contactService)
 	{
 		$this->entityManager = $entityManager;
 		$this->authenticationService = $authenticationService;
         $this->moduleOptions = $moduleOptions;
+        $this->contactService = $contactService;
 	}
 
 	public function send(array $contactsArray, $emailTemplate, $parametersArray, $subject, $type)
@@ -66,4 +68,93 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         /* return status for further tracking */
         return $status;
 	}
+
+    public function importCsvFile($filePath, $database)
+    {
+        // get dir for uploaded csv
+        $targetDir = $this->moduleOptions->getContactUploadedCsvDir();
+
+        // transfer uploded file
+        $now = new \DateTime();
+        $fileInfo = pathinfo($filePath);
+        $receiver = new \Zend\File\Transfer\Adapter\Http();
+        $receiver->setDestination($targetDir)
+            ->setFilters([
+                new \Zend\Filter\File\Rename([
+                    "target" => $targetDir . '/uploaded_csv_' . $now->format('Y_m_d-H:i') . '_' . '.' . $fileInfo['extension'],
+                    "randomize" => true,
+                ]),
+            ]);
+        // file upload element should have name - 'csv-file'
+        $receiver->receive('csv-file');
+        $uploadedCsvFilePath = $receiver->getFileName('csv-file');
+
+        // detect delimiter for csv
+        $delimiter = self::detectCsvFileDelimiter($uploadedCsvFilePath);
+
+        // convert file to array 
+        $contactsArray = file($uploadedCsvFilePath);
+
+        // get titles of columns and transform
+        $columnNames = str_getcsv($contactsArray[0], $delimiter);
+        array_walk($columnNames, function(&$item) {
+            $item = str_replace(" ", "-", $item);
+            $item = strtolower($item); 
+        });
+
+        foreach ($contactsArray as $key => $contact) {
+            // get CSV line by line
+            $contact = str_getcsv($contact, $delimiter);
+            
+            // change keys in array to column names
+            $contact = array_combine($columnNames, $contact);
+
+            // detect Windows-1251 ecoding and change to UTF-8
+            array_walk($contact, function(&$item) {
+                if(mb_check_encoding($item, 'CP1251')){
+                    $item = iconv('CP1251', 'UTF-8', $item);
+                }
+            });
+
+            // rewrite current element to new one
+            $contactsArray[$key] = $contact;
+        }
+
+        // remove column header
+        array_shift($contactsArray);
+
+        // save contacts to database
+        $this->contactService->enter($database, $contactsArray);
+    }
+
+    public static function detectCsvFileDelimiter($csvFilePath, $checkLines = 5)
+    {
+        $file = new \SplFileObject($csvFilePath);
+        $delimiters = [
+            ',', 
+            '\t', 
+            ';', 
+            '|', 
+            ':'
+        ];
+        $results = array();
+        $i = 0;
+         while($file->valid() && $i <= $checkLines){
+            $line = $file->fgets();
+            foreach ($delimiters as $delimiter){
+                $regExp = '/['.$delimiter.']/';
+                $fields = preg_split($regExp, $line);
+                if(count($fields) > 1){
+                    if(!empty($results[$delimiter])){
+                        $results[$delimiter]++;
+                    } else {
+                        $results[$delimiter] = 1;
+                    }   
+                }
+            }
+           $i++;
+        }
+        $results = array_keys($results, max($results));
+        return $results[0];
+    }
 }

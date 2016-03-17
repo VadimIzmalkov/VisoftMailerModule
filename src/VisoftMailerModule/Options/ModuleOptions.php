@@ -10,6 +10,7 @@ class ModuleOptions extends AbstractOptions
 	protected $rootModuleDir;
     protected $logDir; 
     protected $contactExportedCsvDir;
+    protected $contactUploadedCsvDir;
     protected $contactReportsDir;
     protected $contactEnterJsonDir;
     protected $mailingContactsJsonDir;
@@ -23,6 +24,7 @@ class ModuleOptions extends AbstractOptions
     	$this->rootModuleDir = getcwd() . '/data/VisoftMailerModule';
     	$this->logDir = $this->rootModuleDir . '/log';
     	$this->contactExportedCsvDir = $this->rootModuleDir . '/contacts/exported-csv';
+        $this->contactUploadedCsvDir = $this->rootModuleDir . '/contacts/uploaded-csv';
         $this->contactReportsDir = $this->rootModuleDir . '/contacts/reports';
         $this->contactEnterJsonDir = $this->rootModuleDir . '/contacts/enter-json';
         $this->mailingContactsJsonDir = $this->rootModuleDir . '/mailing/contacts-json';
@@ -31,6 +33,7 @@ class ModuleOptions extends AbstractOptions
         \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->rootModuleDir);
         \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->logDir);
         \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->contactExportedCsvDir);
+        \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->contactUploadedCsvDir);
         \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->contactReportsDir);
         \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->contactEnterJsonDir);
         \VisoftBaseModule\Controller\Plugin\AccessoryPlugin::checkDir($this->mailingContactsJsonDir);
@@ -54,6 +57,12 @@ class ModuleOptions extends AbstractOptions
     public function getContactExportedCsvDir() { return $this->contactExportedCsvDir; }
     public function setContactExportedCsvDir($contactExportedCsvDir) { 
     	$this->contactExportedCsvDir = $contactExportedCsvDir;
+        return $this;
+    }
+
+    public function getContactUploadedCsvDir() { return $this->contactUploadedCsvDir; }
+    public function setContactUploadedCsvDir($contactUploadedCsvDir) { 
+        $this->contactUploadedCsvDir = $contactUploadedCsvDir;
         return $this;
     }
 

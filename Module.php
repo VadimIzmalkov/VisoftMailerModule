@@ -91,12 +91,13 @@ class Module
                     $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
                     $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
                     $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
-                    return new Controller\Plugin\MailerPlugin($entityManager, $authenticationService, $moduleOptions);
+                    $contactService = $serviceLocator->get('VisoftMailerModule\Service\ContactService');
+                    return new Controller\Plugin\MailerPlugin($entityManager, $authenticationService, $moduleOptions, $contactService);
                 }
             ],
-            'invokables' => [
-                'detectCsvFileDelimiter' => 'VisoftMailerModule\Controller\Plugin\DetectCsvFileDelimiter',
-            ],
+            // 'invokables' => [
+            //     'detectCsvFileDelimiter' => 'VisoftMailerModule\Controller\Plugin\DetectCsvFileDelimiter',
+            // ],
         );
     }
 }

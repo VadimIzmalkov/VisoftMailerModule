@@ -39,14 +39,9 @@ class ContactService implements ContactServiceInterface
         $contactsTotal = count($contactsArray);
         $contactsJson = json_encode($contactsArray);
         $contactsJsonFilePath = $this->moduleOptions->getContactEnterJsonDir() . '/' . md5(uniqid(mt_rand(), true)) . '.json';
+        
         // saving json to file
         file_put_contents($contactsJsonFilePath, $contactsJson);
-
-        // $json = file_get_contents($contactsJsonFilePath);
-        // // var_dump($json);
-        // unset($contactsArray);
-        // var_dump(json_decode($json, true));
-        // die('fff');
         
         // create and set status entity
         $identity = $this->authenticationService->getIdentity();
@@ -63,17 +58,13 @@ class ContactService implements ContactServiceInterface
         $this->entityManager->persist($status);
         $this->entityManager->flush();
 
+        // log and error files
+        $logWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.log';
+        $errWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.err';
         // command to run exporting in separated process
-        $logWorkerFilePath = $this->moduleOptions->getLogDir() 
-            . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.log';
-        $errWorkerFilePath = $this->moduleOptions->getLogDir() 
-            . '/worker_contacts_enter_' . $now->format("Y-m-d_H-i-s") . '.err';
-        $shell = 'php public/index.php contacts-enter ' 
-            . $status->getId() 
-            . ' >' . $logWorkerFilePath 
-            . ' 2>' . $errWorkerFilePath 
-            . ' &';
+        $shell = 'php public/index.php contacts-enter ' . $status->getId() . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
         shell_exec($shell);
+
         return $status;
 	}
 
@@ -94,13 +85,13 @@ class ContactService implements ContactServiceInterface
         $contactsJsonFilePath = $status->getContactsJsonFilePath();
         $contactsJson = file_get_contents($contactsJsonFilePath);
         $contactsArray = json_decode($contactsJson, true);
-        // var_dump($contactsArray);
-        // die('dddd');
         $uniqueField = $this->moduleOptions->getUniqueField();
+        
         // counters
         $countContactProcessed = 0;
         $countContactAdded = 0;
         $countContactExist = 0;
+        
         // emails that alredy processed for avoiding rapids
         $emailsProcessed = []; 
 
@@ -112,13 +103,17 @@ class ContactService implements ContactServiceInterface
         foreach ($contactsArray as $contactInfo) {
             // previously contact not exist
             $contactNotExist = true;
+            
             // check if contact already exist by email
             if(isset($contactInfo[$uniqueField])) {
                 $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
+                
                 // check if contact was precessed but not persist yet
                 $emailProcessed = in_array(strtolower($contactInfo[$uniqueField]), array_map('strtolower', $emailsProcessed)); 
+                
                 // update flag
                 $contactNotExist = empty($contact) && !$emailProcessed;
+                
                 // contact alraedy in database
                 if(!$contactNotExist) {
                     $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
@@ -134,10 +129,17 @@ class ContactService implements ContactServiceInterface
                 $contact = new $contactEntityInfo->name;
                 $contact->setState($contactState);
                 $contact->addSubscribedOnMailingLists($mailingLists);
+                
+                // set info save all information from CSV
+                // name of the columns creates in VisoftMailerModule\Controller\Plugin\MailerPlugin, method - importCsvFile()
+                // Full Name -> full-name etc.
                 $contact->setInfo($contactInfo);
+                
+                // for cases when users === contacts
                 if($contact instanceof UserInterface) {
                     $contact->setRole($subscriberRole);
                 }
+                
                 $this->entityManager->persist($contact);
                 $countContactAdded++;
             } 
@@ -150,7 +152,6 @@ class ContactService implements ContactServiceInterface
                 $status->setNumContactsExist($countContactExist);
                 $this->entityManager->persist($status);
                 $this->entityManager->flush();
-                // $this->entityManager->clear();
                 unset($emailsProcessed);
                 $emailsProcessed = [];
             }
@@ -160,7 +161,6 @@ class ContactService implements ContactServiceInterface
         $status->setNumContactsExist($countContactExist);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
-        // $this->entityManager->clear();
 
         // logging
         $message = "------------------------------------------------------------------- \n";
