@@ -107,6 +107,9 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
             $contact = str_getcsv($contact, $delimiter);
             
             // change keys in array to column names
+            // var_dump($columnNames);
+            // var_dump($contact);
+            // die('ddd');
             $contact = array_combine($columnNames, $contact);
 
             // detect Windows-1251 ecoding and change to UTF-8

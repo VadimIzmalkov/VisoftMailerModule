@@ -86,7 +86,7 @@ class ContactService implements ContactServiceInterface
         $contactsJson = file_get_contents($contactsJsonFilePath);
         $contactsArray = json_decode($contactsJson, true);
         $uniqueField = $this->moduleOptions->getUniqueField();
-        
+    
         // counters
         $countContactProcessed = 0;
         $countContactAdded = 0;
@@ -101,6 +101,8 @@ class ContactService implements ContactServiceInterface
 
         // start to process every contact
         foreach ($contactsArray as $contactInfo) {
+            var_dump($contactInfo);
+            // die('GGG');
             // previously contact not exist
             $contactNotExist = true;
             
