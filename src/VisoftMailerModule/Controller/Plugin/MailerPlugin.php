@@ -114,7 +114,11 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
 
             // detect Windows-1251 ecoding and change to UTF-8
             array_walk($contact, function(&$item) {
-                if(mb_check_encoding($item, 'CP1251')){
+                $encoding = mb_detect_encoding($item, array('UTF-8', 'Windows-1251', 'KOI8-R'));
+                // if(mb_check_encoding($item, 'CP1251')){
+                //     // $item = iconv('CP1251', 'UTF-8', $item);
+                // }
+                if($encoding !== 'UTF-8') {
                     $item = iconv('CP1251', 'UTF-8', $item);
                 }
             });
