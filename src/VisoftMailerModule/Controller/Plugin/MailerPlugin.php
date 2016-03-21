@@ -107,20 +107,21 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
             $contact = str_getcsv($contact, $delimiter);
             
             // change keys in array to column names
-            // var_dump($columnNames);
-            // var_dump($contact);
-            // die('ddd');
             $contact = array_combine($columnNames, $contact);
 
             // detect Windows-1251 ecoding and change to UTF-8
             array_walk($contact, function(&$item) {
                 $encoding = mb_detect_encoding($item, array('UTF-8', 'Windows-1251', 'KOI8-R'));
                 // if(mb_check_encoding($item, 'CP1251')){
-                //     // $item = iconv('CP1251', 'UTF-8', $item);
+                //     $item = iconv('CP1251', 'UTF-8', $item);
                 // }
                 if($encoding !== 'UTF-8') {
                     $item = iconv('CP1251', 'UTF-8', $item);
                 }
+                $item = \VisoftBaseModule\Service\ForceUTF8\Encoding::toUTF8($item);
+                // if(mb_check_encoding($item, 'CP1251')){
+                //     $item = iconv('CP1251', 'UTF-8', $item);
+                // }
             });
 
             // rewrite current element to new one
@@ -129,6 +130,9 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
 
         // remove column header
         array_shift($contactsArray);
+
+        // var_dump($contactsArray);
+        // die('ffff');
 
         // save contacts to database
         $this->contactService->enter($database, $contactsArray);

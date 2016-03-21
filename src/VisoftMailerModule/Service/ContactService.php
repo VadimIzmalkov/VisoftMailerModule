@@ -37,11 +37,39 @@ class ContactService implements ContactServiceInterface
 	{
         // convertinf array to json 
         $contactsTotal = count($contactsArray);
-        $contactsJson = json_encode($contactsArray);
+        $contactsJson = json_encode($contactsArray, JSON_UNESCAPED_UNICODE);
         $contactsJsonFilePath = $this->moduleOptions->getContactEnterJsonDir() . '/' . md5(uniqid(mt_rand(), true)) . '.json';
         
         // saving json to file
         file_put_contents($contactsJsonFilePath, $contactsJson);
+
+        // switch (json_last_error()) {
+        //     case JSON_ERROR_NONE:
+        //         echo ' - No errors';
+        //     break;
+        //     case JSON_ERROR_DEPTH:
+        //         echo ' - Maximum stack depth exceeded';
+        //     break;
+        //     case JSON_ERROR_STATE_MISMATCH:
+        //         echo ' - Underflow or the modes mismatch';
+        //     break;
+        //     case JSON_ERROR_CTRL_CHAR:
+        //         echo ' - Unexpected control character found';
+        //     break;
+        //     case JSON_ERROR_SYNTAX:
+        //         echo ' - Syntax error, malformed JSON';
+        //     break;
+        //     case JSON_ERROR_UTF8:
+        //         echo ' - Malformed UTF-8 characters, possibly incorrectly encoded';
+        //     break;
+        //     default:
+        //         echo ' - Unknown error';
+        //     break;
+        // }
+        // var_dump($contactsArray);
+        // var_dump($contactsJson);
+        // var_dump($contactsJsonFilePath);
+        // die('123');
         
         // create and set status entity
         $identity = $this->authenticationService->getIdentity();
@@ -98,6 +126,12 @@ class ContactService implements ContactServiceInterface
         $mailingLists = $status->getMailingLists();
         $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', $this->moduleOptions->getRecentlyAddedStateId()); // 2 - Not Confirmed
         $subscriberRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', $this->userService->getOptions()->getRoleSubscriberId());
+
+        // var_dump($contactsJsonFilePath);
+        // var_dump($contactsJson);
+        // var_dump($contactsArray);
+
+        // die('111');
 
         // start to process every contact
         foreach ($contactsArray as $contactInfo) {
