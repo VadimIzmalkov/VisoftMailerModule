@@ -91,10 +91,17 @@ class MailerService implements MailerServiceInterface
         
         // file for contacts that already recieved e-mailes
         $contactsProcessedJsonFilePath = $status->getContactsProcessedJsonFilePath();
-        var_dump($contactsProcessedJsonFilePath );
 
-        $numSent = 0;
+        // get already proccessed contacts
+        // if sending just started should be 0 (set in status constructor)
+        // if sending was interrupt and continue then numProccessed will have some value
+        // "TOTAL contacts" set in mailerPugin while status creating
+        $numProcessed = $status->getNumContactsProcessed();
+
+        // init new array for proccessed contacts
         $contactsProcessedArray = [];
+
+        // start sending
         foreach ($contactsArray as $contact) {
             if(empty($contactsProcessedArray) && file_exists($contactsProcessedJsonFilePath)) {
                 $contactsProcessedJson = file_get_contents($contactsProcessedJsonFilePath);
@@ -106,8 +113,9 @@ class MailerService implements MailerServiceInterface
             // TODO: Sending emails
 
             array_push($contactsProcessedArray, $contact['email']);
-            $numSent++;
-            if(!($numSent % 2000)) {
+            $numProcessed++;
+            if(!($numProcessed % 2000)) {
+                $status->setNumContactsProcessed($numProcessed);
                 $contactsProcessedJson = json_decode($contactsProcessedArray);
                 file_put_contents($contactsProcessedJsonFilePath, $contactsProcessedJson);
                 $contactsProcessedArray = [];
@@ -138,29 +146,10 @@ class MailerService implements MailerServiceInterface
         }
         $contactsProcessedJson = json_encode($contactsProcessedArray);
         file_put_contents($contactsProcessedJsonFilePath, $contactsProcessedJson);
-        $status->setNumContactsProcessed($numSent);
+        $status->setNumContactsProcessed($numProcessed);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
 	}
-
-	// public function createMailingList($name)
-	// {
- //        $entityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\MailingListInterface');
- //        $entity = new $entityInfo->name;
- //        $entity->setName($name);
- //        $this->entityManager->persist($entity);
- //        $this->entityManager->flush();
- //        return $entity;
-	// }
-
-	// public function createCampaign($name)
-	// {
- //        $entity = new Entity\Campaign();
- //        $entity->setName($name);
- //        $this->entityManager->persist($entity);
- //        $this->entityManager->flush();
- //        return $entity;
-	// }
 
     public function getOptions()
     {
@@ -184,22 +173,11 @@ class MailerService implements MailerServiceInterface
     public function processCompleted($status)
     {
         $status->setFinishedAt(new \Datetime());
-        $status->setState(2);
+        $status->setState(3);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
         return $status;
     }
-
-    // protected function checkDir($path)
-    // {
-    //     if (!is_dir($path)) {
-    //         $oldmask = umask(0);
-    //         if (!mkdir($path, 0777, true)) {
-    //             die('Failed to create folders' . $path );
-    //         }
-    //         umask($oldmask);
-    //     }        
-    // }
 
     protected function getDateTimeWithMicroseconds()
     {

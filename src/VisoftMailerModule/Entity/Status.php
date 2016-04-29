@@ -100,6 +100,7 @@ class Status
     public function __construct()
     {
         $this->state = 0;
+        $this->numContactsProcessed = 0;
         $this->token = md5(uniqid(mt_rand(), true));
     	$this->createdAt = new \DateTime();
     }

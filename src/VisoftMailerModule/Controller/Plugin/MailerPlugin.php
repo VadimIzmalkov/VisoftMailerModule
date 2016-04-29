@@ -22,8 +22,8 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
 	{
 		$now = new \DateTime();
 
-		/* 1. Save caontacts to intermidate file */
-		// convertinf contacts array to json 
+		/* 1. Save contacts to intermidate file */
+		// convert contacts array to json 
 		$contactsJson = json_encode($contactsArray);
 		// generate json files with random name
 		$contactsJsonFilePath = $this->moduleOptions->getMailingContactsJsonDir() . '/contacts_' . md5(uniqid(mt_rand(), true)) . '.json';
@@ -48,9 +48,11 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         $this->entityManager->persist($status);
         $this->entityManager->flush();
 
-        /* 3. Start sending in separate process */
+        /* 3. Run sending in separate process */
+        // files for errors and logs
         $logWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.log';
         $errWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.err';
+        // sending action depends type: bulk, individual etc. 
         switch ($type) {
         	case 'bulk':
         		$shell = 'php public/index.php send-bulk ' . $status->getId() . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
