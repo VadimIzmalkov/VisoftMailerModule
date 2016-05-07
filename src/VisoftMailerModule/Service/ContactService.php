@@ -99,28 +99,29 @@ class ContactService implements ContactServiceInterface
         $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', $this->moduleOptions->getRecentlyAddedStateId()); // 2 - Not Confirmed
         $subscriberRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', $this->userService->getOptions()->getRoleSubscriberId());
 
-        // var_dump($contactsJsonFilePath);
-        // var_dump($contactsJson);
-        // var_dump($contactsArray);
-
-        // die('111');
-
         // start to process every contact
         foreach ($contactsArray as $contactInfo) {
-            var_dump($contactInfo);
-            // die('GGG');
             // previously contact not exist
             $contactNotExist = true;
             
-            // check if contact already exist by email
+            // check if contact already exist by unique data
+            // unique data can be
+            // - e-mail
+            // - phone
+            // unique data sets in visoftmailermodule.global.php
+            // peristing allowed only if same field exists in contact's info - exmp.: $contactsInfo['email']
             if(isset($contactInfo[$uniqueField])) {
                 $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
                 
-                // check if contact was precessed but not persist yet
-                $emailProcessed = in_array(strtolower($contactInfo[$uniqueField]), array_map('strtolower', $emailsProcessed)); 
+                // check if contact already in list for persisting
+                // convert email to lowercase
+                $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
+                $emailContactLower = strtolower($contactInfo[$uniqueField]);
+
+                $emailProcessedFlag = in_array($emailContactLower, $emailsProcessedLower); 
                 
                 // update flag
-                $contactNotExist = empty($contact) && !$emailProcessed;
+                $contactNotExist = empty($contact) && !$emailProcessedFlag;
                 
                 // contact alraedy in database
                 if(!$contactNotExist) {
