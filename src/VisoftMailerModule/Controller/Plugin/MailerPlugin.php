@@ -87,7 +87,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
                     "randomize" => true,
                 ]),
             ]);
-        // file upload element should have name - 'csv-file'
+        // file upload element in form class should have name 'csv-file' !! TODO: fix this dependency
         $receiver->receive('csv-file');
         $uploadedCsvFilePath = $receiver->getFileName('csv-file');
 
@@ -133,8 +133,9 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         // remove column header
         array_shift($contactsArray);
 
+        // debug array
         // var_dump($contactsArray);
-        // die('ffff');
+        // die('11122');
 
         // save contacts to database
         $this->contactService->enter($database, $contactsArray);

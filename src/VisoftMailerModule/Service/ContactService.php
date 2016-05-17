@@ -33,7 +33,7 @@ class ContactService implements ContactServiceInterface
         $this->checkDir($this->moduleOptions->getContactEnterJsonDir());
 	}
 
-	public function enter($mailingLists, array $contactsArray)
+	public function enter($database, array $contactsArray)
 	{
         // convert array to json 
         $contactsTotal = count($contactsArray);
@@ -50,7 +50,8 @@ class ContactService implements ContactServiceInterface
             $status->setCreatedBy($identity);
         $status->setNumTotalContacts($contactsTotal);
         $status->setContactsJsonFilePath($contactsJsonFilePath);
-        $status->addMailingLists($mailingLists);
+        // $status->addMailingLists($database);
+        $status->setDatabase($database);
         $now = new \DateTime();
         $reportFileName = 'contacts_enter_' . $now->format('d-m-Y_H-i-s') . '.txt';
         $reportFilePath = $this->moduleOptions->getContactReportsDir() . '/' . $reportFileName;
@@ -85,6 +86,7 @@ class ContactService implements ContactServiceInterface
         $contactsJsonFilePath = $status->getContactsJsonFilePath();
         $contactsJson = file_get_contents($contactsJsonFilePath);
         $contactsArray = json_decode($contactsJson, true);
+        // set unique field - email, phone, name etc.
         $uniqueField = $this->moduleOptions->getUniqueField();
     
         // counters
@@ -95,9 +97,12 @@ class ContactService implements ContactServiceInterface
         // emails that alredy processed for avoiding rapids
         $emailsProcessed = []; 
 
-        $mailingLists = $status->getMailingLists();
-        $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', $this->moduleOptions->getRecentlyAddedStateId()); // 2 - Not Confirmed
-        $subscriberRole = $this->entityManager->find('VisoftBaseModule\Entity\UserRole', $this->userService->getOptions()->getRoleSubscriberId());
+        // $mailingLists = $status->getMailingLists();
+        $database = $status->getDatabase();
+
+        // TODO: move below to inherit class
+        // this data should be dependence
+        // $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', $this->moduleOptions->getRecentlyAddedStateId()); // 2 - Not Confirmed
 
         // start to process every contact
         foreach ($contactsArray as $contactInfo) {
@@ -123,7 +128,7 @@ class ContactService implements ContactServiceInterface
                 // update flag
                 $contactNotExist = empty($contact) && !$emailProcessedFlag;
                 
-                // contact alraedy in database
+                // contact already in database
                 if(!$contactNotExist) {
                     $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
                     array_push($emailsProcessed, $contactInfo[$uniqueField]);
@@ -132,22 +137,24 @@ class ContactService implements ContactServiceInterface
                 }
             } 
             
-            // save contact if NOT exist
+            // create new contact if one has not been find before
             if($contactNotExist) {
                 $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
                 $contact = new $contactEntityInfo->name;
-                $contact->setState($contactState);
-                $contact->addSubscribedOnMailingLists($mailingLists);
+
+                $this->setContact($contact, $database, $contactInfo);
+                // $contact->setState($contactState);
+                // $contact->addSubscribedOnMailingLists($mailingLists);
                 
-                // set info save all information from CSV
-                // name of the columns creates in VisoftMailerModule\Controller\Plugin\MailerPlugin, method - importCsvFile()
-                // Full Name -> full-name etc.
-                $contact->setInfo($contactInfo);
+                // // set info save all information from CSV
+                // // name of the columns creates in VisoftMailerModule\Controller\Plugin\MailerPlugin, method - importCsvFile()
+                // // Full Name -> full-name etc.
+                // $contact->setInfo($contactInfo);
                 
-                // for cases when users === contacts
-                if($contact instanceof UserInterface) {
-                    $contact->setRole($subscriberRole);
-                }
+                // // for cases when users === contacts
+                // if($contact instanceof UserInterface) {
+                //     $contact->setRole($subscriberRole);
+                // }
                 
                 $this->entityManager->persist($contact);
                 $countContactAdded++;
@@ -322,6 +329,11 @@ class ContactService implements ContactServiceInterface
             }
             umask($oldmask);
         }        
+    }
+
+    protected function setContact(&$contact, $database)
+    {
+
     }
 
     protected function getDateTimeWithMicroseconds()

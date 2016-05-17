@@ -35,7 +35,13 @@ class StatusContactEnter extends Status
      * inverseJoinColumns={@ORM\JoinColumn(name="database_id", referencedColumnName="id", unique=false)}
      * )
      */
-    protected $databases;
+    // protected $databases;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\DatabaseInterface")
+     * @ORM\JoinColumn(name="database_id", referencedColumnName="id", nullable=true,  unique=false)
+     */
+    protected $database;
 
     public function __construct() {
     	parent::__construct();
@@ -59,34 +65,39 @@ class StatusContactEnter extends Status
     	return $this;
     }
 
-    public function getMailingLists() { return $this->databases; }
-    public function addMailingList(DatabaseInterface $mailingList) {
-        $this->databases->add($mailingList);
+    public function getDatabase() { return $this->database; }
+    public function setDatabase($database) {
+        $this->database = $database;
         return $this;
     }
-    public function addMailingLists($databases) {
-        if(is_array($databases) 
-            || $databases instanceof Traversable 
-            || $databases instanceof ArrayCollection
-            || $databases instanceof PersistentCollection)
-            foreach ($databases as $mailingList) 
-                $this->databases->add($mailingList);
-        elseif($databases instanceof DatabaseInterface)
-            $this->databases->add($databases);
-        else 
-            throw new \Exception("mailingLists is expected to be instance of MailingListInterface or Traversable", 1);
-        return $this;
-    }
-    public function removeMailingList(DatabaseInterface $mailingList) {
-        $this->databases->removeElement($mailingList);
-        return $this;
-    }
-    public function removeMailingLists($databases) {
-        foreach ($databases as $mailingList) 
-            $this->databases->removeElement($mailingList);
-        return $this;
-    }
+    // public function getMailingLists() { return $this->databases; }
+    // public function addMailingList(DatabaseInterface $mailingList) {
+    //     $this->databases->add($mailingList);
+    //     return $this;
+    // }
+    // public function addMailingLists($databases) {
+    //     if(is_array($databases) 
+    //         || $databases instanceof Traversable 
+    //         || $databases instanceof ArrayCollection
+    //         || $databases instanceof PersistentCollection)
+    //         foreach ($databases as $mailingList) 
+    //             $this->databases->add($mailingList);
+    //     elseif($databases instanceof DatabaseInterface)
+    //         $this->databases->add($databases);
+    //     else 
+    //         throw new \Exception("mailingLists is expected to be instance of MailingListInterface or Traversable", 1);
+    //     return $this;
+    // }
+    // public function removeMailingList(DatabaseInterface $mailingList) {
+    //     $this->databases->removeElement($mailingList);
+    //     return $this;
+    // }
+    // public function removeMailingLists($databases) {
+    //     foreach ($databases as $mailingList) 
+    //         $this->databases->removeElement($mailingList);
+    //     return $this;
+    // }
 
-    public function getDatabases() { return $this->databases; }
+    // public function getDatabases() { return $this->databases; }
 }
 	
