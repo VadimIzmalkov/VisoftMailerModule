@@ -16,12 +16,7 @@ class MailerService implements MailerServiceInterface
 	protected $authenticationService;
 	protected $acMailService;
 
-	public function __construct(
-		EntityManager $entityManager,
-		ModuleOptions $moduleOptions, 
-		$authenticationService, 
-		AcMailService $acMailService
-	)
+	public function __construct($entityManager, $moduleOptions, $authenticationService, $acMailService)
 	{
 		$this->entityManager = $entityManager;
 		$this->moduleOptions = $moduleOptions;
@@ -110,13 +105,14 @@ class MailerService implements MailerServiceInterface
         	if(in_array($contact['email'], $contactsProcessedArray))
         		continue;
 
-            // TODO: Sending emails
+            // TODO: Send email HERE
+            $this->sendEmail($status, $contact);
 
             array_push($contactsProcessedArray, $contact['email']);
             $numProcessed++;
             if(!($numProcessed % 2000)) {
                 $status->setNumContactsProcessed($numProcessed);
-                $contactsProcessedJson = json_decode($contactsProcessedArray);
+                $contactsProcessedJson = json_encode($contactsProcessedArray);
                 file_put_contents($contactsProcessedJsonFilePath, $contactsProcessedJson);
                 $contactsProcessedArray = [];
             }
@@ -150,6 +146,12 @@ class MailerService implements MailerServiceInterface
         $this->entityManager->persist($status);
         $this->entityManager->flush();
 	}
+
+    // TODO: move this logic to fryday module 
+    public function sendEmail($status)
+    {
+
+    }
 
     public function getOptions()
     {

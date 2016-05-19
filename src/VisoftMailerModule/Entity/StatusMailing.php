@@ -15,16 +15,24 @@ class StatusMailing extends Status
      * @ORM\Column(name="email_template", type="string", length=255, nullable=true, unique=false)
      */
     protected $emailTemplate;
+    
     /**
      * @var string
      * @ORM\Column(name="parameters_json", type="string", length=255, nullable=true, unique=false)
      */
     protected $parametersJson;
+    
     /**
      * @var string
      * @ORM\Column(name="subject", type="string", length=255, nullable=true, unique=false)
      */
     protected $subject;
+
+    /**
+     * @var string
+     * @ORM\Column(name="mailing_type", type="string", length=255, nullable=true, unique=false)
+     */
+    protected $mailingType;
 
     /**
      * @var integer
@@ -61,6 +69,9 @@ class StatusMailing extends Status
     	$this->subject = $subject;
     	return $this;
     }
+
+    public function getMailingType() { return $this->mailingType; }
+    public function setMailingType($mailingType) { $this->mailingType = $mailingType; }
 
     public function getNumClicks() { return $this->numClicks; }
     public function setNumClicks($numClicks) {

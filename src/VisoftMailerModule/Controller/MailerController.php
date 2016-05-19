@@ -34,6 +34,7 @@ class MailerController extends BaseController
 	public function sendBulkAction()
 	{
         $status = $this->getStatusFromRoute();
+        // workload = $statusId ($status->getId())
         $process = $this->processingService->createBackgroundProcess("sendBulk", $status->getId());
         $process->getWorker()->addFunction('sendBulk', function (\GearmanJob $job) {
         	$status = $this->mailerService->processStarted($job->workload());
