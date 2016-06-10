@@ -45,6 +45,20 @@ class MailerController extends BaseController
         $process->run();
 	}
 
+    public function sendIndividualAction()
+    {
+        $status = $this->getStatusFromRoute();
+        // workload = $statusId ($status->getId())
+        $process = $this->processingService->createBackgroundProcess("sendIndividual", $status->getId());
+        $process->getWorker()->addFunction('sendIndividual', function (\GearmanJob $job) {
+            $status = $this->mailerService->processStarted($job->workload());
+            $this->mailerService->send($status);
+            $this->mailerService->processCompleted($status);
+            return true;
+        });
+        $process->run();
+    }
+
     private function getStatusFromRoute()
     {
         $request = $this->getRequest();

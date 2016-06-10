@@ -18,7 +18,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         $this->contactService = $contactService;
 	}
 
-	public function send(array $contactsArray, $emailTemplate, $parametersArray, $subject, $type)
+	public function send(array $contactsArray, $emailTemplate, $parametersArray, $subject, $mailingType, $sendingType)
 	{
 		$now = new \DateTime();
 
@@ -45,6 +45,8 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         $status->setEmailTemplate($emailTemplate);
         $status->setParametersJson(json_encode($parametersArray));        
         $status->setOutputFilePath($reportFilePath);
+        $status->setMailingType($mailingType);
+        $status->setSubject($subject);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
 
@@ -52,8 +54,8 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         // files for errors and logs
         $logWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.log';
         $errWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.err';
-        // sending action depends type: bulk, individual etc. 
-        switch ($type) {
+        // sending action depends on sending type: bulk, individual etc. 
+        switch ($sendingType) {
         	case 'bulk':
         		$shell = 'php public/index.php send-bulk ' . $status->getId() . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
         		break;
