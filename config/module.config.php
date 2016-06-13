@@ -38,7 +38,7 @@ return [
                 ],
                 'send-bulk' => [
                     'options' => [
-                        'route' => 'send-bulk <statusid>',
+                        'route' => 'send-bulk <statusid> <serverurl>',
                         'defaults' => [
                             '__NAMESPACE__' => 'VisoftMailerModule\Controller',
                             'controller'    => 'mailer',

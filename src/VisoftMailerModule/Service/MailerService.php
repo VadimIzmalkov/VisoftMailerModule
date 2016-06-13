@@ -15,6 +15,7 @@ class MailerService implements MailerServiceInterface
 	protected $moduleOptions;
 	protected $authenticationService;
 	protected $acMailService;
+    protected $serverUrl = null;
 
 	public function __construct($entityManager, $moduleOptions, $authenticationService, $acMailService)
 	{
@@ -72,8 +73,9 @@ class MailerService implements MailerServiceInterface
 
     // }
 
-	public function send($status)
+	public function send($status, $serverUrl = null)
 	{
+        $this->serverUrl = $serverUrl;
         // start sending
         // $mailing = $status->getMailing();
         // $mailingListsIds = $campaign->getMailingLists()->map(function($entity) { return $entity->getId(); })->toArray();

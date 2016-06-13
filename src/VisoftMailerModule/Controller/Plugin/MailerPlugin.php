@@ -51,13 +51,16 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         $this->entityManager->flush();
 
         /* 3. Run sending in separate process */
+        // server URL
+        $serverUrlHelper = new \Zend\View\Helper\ServerUrl();
+        $serverUrl = $serverUrlHelper->__invoke();
         // files for errors and logs
         $logWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.log';
         $errWorkerFilePath = $this->moduleOptions->getLogDir() . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.err';
         // sending action depends on sending type: bulk, individual etc. 
         switch ($sendingType) {
         	case 'bulk':
-        		$shell = 'php public/index.php send-bulk ' . $status->getId() . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
+        		$shell = 'php public/index.php send-bulk ' . $status->getId() . ' ' . $serverUrl . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
         		break;
         	case 'individual':
         		$shell = 'php public/index.php send-individual ' . $status->getId() . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
