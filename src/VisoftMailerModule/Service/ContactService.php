@@ -71,7 +71,7 @@ class ContactService implements ContactServiceInterface
 
 	public function persist($status)
 	{
-       	// logging
+       	// forming of header log message 
        	$reportFilePath = $status->getOutputFilePath();
        	$message = "====================  PERSIST CONTACTS REPORT  ====================\n";
        	$message .= "Status id: " . $status->getId() . "\n";

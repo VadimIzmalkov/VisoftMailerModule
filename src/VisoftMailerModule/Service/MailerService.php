@@ -25,54 +25,6 @@ class MailerService implements MailerServiceInterface
 		$this->acMailService = $acMailService;
 	}
 
-	// public function sendCampaign($campaign)
-	// {
-	// 	$now = new \DateTime();
-	// 	$authenticatedUser = $this->authenticationService->getIdentity();
-	// 	$status = new Entity\StatusMailer();
-	// 	$status->setCampaign($campaign);
-	// 	$this->entityManager->persist($status);
- //        $this->entityManager->flush();
- //        $statusId = $status->getId();
- //        // command to run exporting in separated process
- //        $logWorkerFilePath = $this->moduleOptions->getLogDir() 
- //            . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.log';
- //        $errWorkerFilePath = $this->moduleOptions->getLogDir() 
- //            . '/worker_send_mails_' . $now->format("Y-m-d_H-i-s") . '.err';
- //        $shell = 'php public/index.php send-campaign ' 
- //            . $statusId 
- //            . ' >' . $logWorkerFilePath 
- //            . ' 2>' . $errWorkerFilePath 
- //            . ' &';
- //        shell_exec($shell);
- //        return $status;
-	// }
-
-    // public function sendMailing($mailing)
-    // {
-    //     $now = new \DateTime();
-    //     $authenticatedUser = $this->authenticationService->getIdentity();
-    //     $status = new Entity\StatusMailing();
-    //     $status->setMailing($mailing);
-    //     $status->setCreatedBy($authenticatedUser);
-    //     $this->entityManager->persist($status);
-    //     $this->entityManager->flush();
-    //     $statusId = $status->getId();
-    //     // command to run exporting in separated process
-    //     $logWorkerFilePath = $this->moduleOptions->getLogDir() 
-    //         . '/worker_send_mailing_' . $now->format("Y-m-d_H-i-s") . '.log';
-    //     $errWorkerFilePath = $this->moduleOptions->getLogDir() 
-    //         . '/worker_send_mailing_' . $now->format("Y-m-d_H-i-s") . '.err';
-    //     $shell = 'php public/index.php send-mailing ' 
-    //         . $statusId 
-    //         . ' >' . $logWorkerFilePath 
-    //         . ' 2>' . $errWorkerFilePath 
-    //         . ' &';
-    //     shell_exec($shell);
-    //     return $status;
-
-    // }
-
 	public function send($status, $serverUrl = null)
 	{
         $this->serverUrl = $serverUrl;
@@ -168,7 +120,7 @@ class MailerService implements MailerServiceInterface
             return false;
         }
         $status->setStartedAt(new \Datetime());
-        $status->setState(1);
+        $status->setState(2);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
         return $status;

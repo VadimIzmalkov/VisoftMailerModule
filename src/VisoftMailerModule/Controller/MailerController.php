@@ -75,6 +75,10 @@ class MailerController extends BaseController
         if(!$statusId)
             throw new \RuntimeException('Status id not specified');
         $status = $this->entityManager->find('VisoftMailerModule\Entity\Status', $statusId);
+
+        $status->setState(1);
+        $this->entityManager->persist($status);
+        $this->entityManager->flush();
         return $status;
     }
 }

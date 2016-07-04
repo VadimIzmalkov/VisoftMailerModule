@@ -47,6 +47,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         $status->setOutputFilePath($reportFilePath);
         $status->setMailingType($mailingType);
         $status->setSubject($subject);
+        $status->setState(0);
         $this->entityManager->persist($status);
         $this->entityManager->flush();
 
