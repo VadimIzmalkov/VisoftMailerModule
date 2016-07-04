@@ -69,6 +69,8 @@ class MailerService implements MailerServiceInterface
                 $contactsProcessedJson = json_encode($contactsProcessedArray);
                 file_put_contents($contactsProcessedJsonFilePath, $contactsProcessedJson);
                 $contactsProcessedArray = [];
+                $this->entityManager->persist($status);
+                $this->entityManager->flush();
             }
         	// $recipientState = new Entity\RecipientState();
          //    $recipientState->setEmail($recipient['email']);
