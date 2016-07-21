@@ -48,7 +48,7 @@ return [
                 ],
                 'send-individual' => [
                     'options' => [
-                        'route' => 'send-individual <statusid>',
+                        'route' => 'send-individual <statusid> <serverurl>',
                         'defaults' => [
                             '__NAMESPACE__' => 'VisoftMailerModule\Controller',
                             'controller'    => 'mailer',

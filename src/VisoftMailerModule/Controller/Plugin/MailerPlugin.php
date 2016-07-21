@@ -64,7 +64,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         		$shell = 'php public/index.php send-bulk ' . $status->getId() . ' ' . $serverUrl . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
         		break;
         	case 'individual':
-        		$shell = 'php public/index.php send-individual ' . $status->getId() . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
+        		$shell = 'php public/index.php send-individual ' . $status->getId() . ' ' . $serverUrl . ' >' . $logWorkerFilePath . ' 2>' . $errWorkerFilePath . ' &';
         		break;
         	default:
         		# code...
