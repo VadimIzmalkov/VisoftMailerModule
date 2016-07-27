@@ -73,6 +73,7 @@ class ContactService implements ContactServiceInterface
 	{
        	// forming of header log message 
        	$reportFilePath = $status->getOutputFilePath();
+        echo 'Report file: ' . $reportFilePath;
        	$message = "====================  PERSIST CONTACTS REPORT  ====================\n";
        	$message .= "Status id: " . $status->getId() . "\n";
        	$message .= "Date: " . $this->getDateTimeWithMicroseconds()->format('d/m/Y') . "\n";
@@ -104,6 +105,47 @@ class ContactService implements ContactServiceInterface
         // this data should be dependence
         // $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', $this->moduleOptions->getRecentlyAddedStateId()); // 2 - Not Confirmed
 
+        // // start to process every contact
+        // foreach ($contactsArray as $contactInfo) {
+        //     // previously contact not exist
+        //     $contactExists = false;
+            
+        //     // check if contact already exist by unique data
+        //     // unique data can be
+        //     // - e-mail
+        //     // - phone
+        //     // unique data sets in visoftmailermodule.global.php
+        //     // peristing allowed only if same field exists in contact's info - exmp.: $contactsInfo['email']
+        //     if(isset($contactInfo[$uniqueField])) {
+        //         // check contact in database
+        //         $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
+        //         if(!empty($contact)) {
+        //             $contactExists = true;
+        //             array_push($emailsProcessed, $contactInfo[$uniqueField]);
+        //         }
+                
+        //         // convert email to lowercase
+        //         $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
+        //         $emailContactLower = strtolower($contactInfo[$uniqueField]);
+
+        //         // check contact in email list that already was persisted
+        //         $contactExists = in_array($emailContactLower, $emailsProcessedLower); 
+                
+        //         // update flag
+        //         // $contactNotExist = empty($contact) && !$emailProcessedFlag;
+                
+        //         // contact already in database
+        //         if($contactExists) {
+        //             $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
+        //             file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
+        //             $countContactExist++;
+        //             continue;
+        //         }
+        //     } 
+            
+        //     // create new contact if one has not been find before
+        //     if(!$contactExists) {
+
         // start to process every contact
         foreach ($contactsArray as $contactInfo) {
             // previously contact not exist
@@ -122,7 +164,6 @@ class ContactService implements ContactServiceInterface
                 // convert email to lowercase
                 $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
                 $emailContactLower = strtolower($contactInfo[$uniqueField]);
-
                 $emailProcessedFlag = in_array($emailContactLower, $emailsProcessedLower); 
                 
                 // update flag
@@ -331,7 +372,7 @@ class ContactService implements ContactServiceInterface
         }        
     }
 
-    protected function setContact(&$contact, $database)
+    protected function setContact(&$contact, $database, $contactInfo)
     {
 
     }
