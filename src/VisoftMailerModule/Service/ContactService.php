@@ -147,43 +147,46 @@ class ContactService implements ContactServiceInterface
         //     if(!$contactExists) {
 
         // start to process every contact
-        foreach ($contactsArray as $contactInfo) {
-            // previously contact not exist
-            $contactNotExist = true;
-            
-            // check if contact already exist by unique data
-            // unique data can be
-            // - e-mail
-            // - phone
-            // unique data sets in visoftmailermodule.global.php
-            // peristing allowed only if same field exists in contact's info - exmp.: $contactsInfo['email']
-            if(isset($contactInfo[$uniqueField])) {
-                $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
-                
-                // check if contact already in list for persisting
-                // convert email to lowercase
-                $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
-                $emailContactLower = strtolower($contactInfo[$uniqueField]);
-                $emailProcessedFlag = in_array($emailContactLower, $emailsProcessedLower); 
-                
-                // update flag
-                $contactNotExist = empty($contact) && !$emailProcessedFlag;
-                
-                // contact already in database
-                if(!$contactNotExist) {
-                    $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
-                    array_push($emailsProcessed, $contactInfo[$uniqueField]);
-                    file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
-                    $countContactExist++;
-                }
-            } 
-            
-            // create new contact if one has not been find before
-            if($contactNotExist) {
-                $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
-                $contact = new $contactEntityInfo->name;
+        foreach ($contactsArray as $contactArray) {
+            $contactExists = false;
 
-                $this->setContact($contact, $database, $contactInfo);
+            /*
+            check if contact already exists
+            unique data can be
+            - e-mail
+            - phone
+            unique data sets in visoftmailermodule.global.php
+            */
+
+            // peristing allowed only if same field exists in contact's info - exmp.: $contactsInfo['email']
+            if(!isset($contactArray[$uniqueField]))
+                continue;
+
+            // check if contact exists in database
+            $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactArray[$uniqueField]]);
+            if(!empty($contact))
+                $contactExists = true;
+
+            // check if contact in buffer array
+            $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
+            $emailContactLower = strtolower($contactArray[$uniqueField]);
+            if(in_array($emailContactLower, $emailsProcessedLower)) {
+                $countContactExist++;
+                $contactExists = true;
+            } else {
+                array_push($emailsProcessed, $contactArray[$uniqueField]);
+            }
+
+            if($contactExists) {
+                $message = "Warning: " . $contactArray[$uniqueField] . " alredy exists and cannot be added \n";
+                file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
+                $countContactExist++;
+                continue;
+            }
+
+            $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
+            $contact = new $contactEntityInfo->name;
+            $this->setContact($contact, $database, $contactArray);
                 // $contact->setState($contactState);
                 // $contact->addSubscribedOnMailingLists($mailingLists);
                 
@@ -197,10 +200,9 @@ class ContactService implements ContactServiceInterface
                 //     $contact->setRole($subscriberRole);
                 // }
                 
-                $this->entityManager->persist($contact);
-                $countContactAdded++;
-            } 
-            
+            $this->entityManager->persist($contact);
+            $countContactAdded++;
+
             $countContactProcessed++;
 
             if (!($countContactProcessed % 2000)) { # do flushing once per 2000 emails
@@ -209,10 +211,76 @@ class ContactService implements ContactServiceInterface
                 $status->setNumContactsExist($countContactExist);
                 $this->entityManager->persist($status);
                 $this->entityManager->flush();
-                unset($emailsProcessed);
-                $emailsProcessed = [];
+                // unset($emailsProcessed);
+                // $emailsProcessed = [];
             }
         }
+        // foreach ($contactsArray as $contactInfo) {
+        //     // previously contact not exist
+        //     $contactNotExist = true;
+            
+        //     // check if contact already exist by unique data
+        //     // unique data can be
+        //     // - e-mail
+        //     // - phone
+        //     // unique data sets in visoftmailermodule.global.php
+        //     // peristing allowed only if same field exists in contact's info - exmp.: $contactsInfo['email']
+        //     if(isset($contactInfo[$uniqueField])) {
+        //         $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
+                
+        //         // check if contact already in list for persisting
+        //         // convert email to lowercase
+        //         $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
+        //         $emailContactLower = strtolower($contactInfo[$uniqueField]);
+        //         $emailProcessedFlag = in_array($emailContactLower, $emailsProcessedLower); 
+                
+        //         // update flag
+        //         $contactNotExist = empty($contact) && !$emailProcessedFlag;
+                
+        //         // contact already in database
+        //         if(!$contactNotExist) {
+        //             $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
+        //             array_push($emailsProcessed, $contactInfo[$uniqueField]);
+        //             file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
+        //             $countContactExist++;
+        //         }
+        //     } 
+            
+        //     // create new contact if one has not been find before
+        //     if($contactNotExist) {
+        //         $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
+        //         $contact = new $contactEntityInfo->name;
+
+        //         $this->setContact($contact, $database, $contactInfo);
+        //         // $contact->setState($contactState);
+        //         // $contact->addSubscribedOnMailingLists($mailingLists);
+                
+        //         // // set info save all information from CSV
+        //         // // name of the columns creates in VisoftMailerModule\Controller\Plugin\MailerPlugin, method - importCsvFile()
+        //         // // Full Name -> full-name etc.
+        //         // $contact->setInfo($contactInfo);
+                
+        //         // // for cases when users === contacts
+        //         // if($contact instanceof UserInterface) {
+        //         //     $contact->setRole($subscriberRole);
+        //         // }
+                
+        //         $this->entityManager->persist($contact);
+        //         $countContactAdded++;
+        //     } 
+            
+        //     $countContactProcessed++;
+
+        //     if (!($countContactProcessed % 2000)) { # do flushing once per 2000 emails
+        //         $status->setNumContactsProcessed($countContactProcessed);
+        //         $status->setNumContactsAdded($countContactAdded);
+        //         $status->setNumContactsExist($countContactExist);
+        //         $this->entityManager->persist($status);
+        //         $this->entityManager->flush();
+        //         unset($emailsProcessed);
+        //         $emailsProcessed = [];
+        //     }
+        // }
         $status->setNumContactsProcessed($countContactProcessed);
         $status->setNumContactsAdded($countContactAdded);
         $status->setNumContactsExist($countContactExist);
