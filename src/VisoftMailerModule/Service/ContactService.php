@@ -326,30 +326,64 @@ class ContactService implements ContactServiceInterface
 
     public function dump($status)
     {
-        $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getDatabase()->getId());
+        $this->toFile($status);
+        // var_dump($status);
+        // die('123');
+        
+        // var_dump(count($contacts));
+        // die('123');
+        // $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getDatabase()->getId());
+        // $csvFilePath = $status->getOutputFilePath();
+        // $line = null;
+        // foreach ($contactsSubscribed as $contact) {
+        //     // find header
+        //     if(is_null($line)) {
+        //         // Fields and header determinates in findBySibscribedOnMailingLists function. 
+        //         // If needs to change selection of exported data please refer to findBySibscribedOnMailingLists function
+        //         $line = implode(",", array_keys($contact)) . "\n";; // header
+        //     }
+        //     $line .= implode(',', $contact) . "\n";
+        //     // $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
+        // }
+        // $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($status->getDatabase()->getId());
+        // if(!empty($contactsUnsubscribed))   {
+        //     $line .= "\n" . "Unsubscribed" . "\n";
+        //     foreach ($contactsUnsubscribed as $contact) {
+        //         $line .= implode(',', $contact) . "\n";
+        //         // if(isset($contact['stateName']))
+        //         //     $state = $contact['stateName'];
+        //         // else 
+        //         //     $state = 'Unknown';
+        //         // $line .= $contact['email'] . ', ' . $state . "\n";
+        //     }
+        // }
+        // file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
+        // unset($line);
+    }
+
+    protected function toFile($status)
+    {
+        $database = $status->getDatabase();
+        $contacts = $this->entityManager->getRepository('TinyCRM\Entity\Contact')->findArrayByDatabase($database->getId());
         $csvFilePath = $status->getOutputFilePath();
         $line = null;
-        foreach ($contactsSubscribed as $contact) {
+        foreach ($contacts as $contact) {
             // find header
             if(is_null($line)) {
                 // Fields and header determinates in findBySibscribedOnMailingLists function. 
                 // If needs to change selection of exported data please refer to findBySibscribedOnMailingLists function
-                $line = implode(",", array_keys($contact)) . "\n";; // header
+                $line = implode(",", array_keys($contact)) . "\n"; // header
             }
-            $line .= implode(',', $contact) . "\n";
-            // $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
-        }
-        $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($status->getDatabase()->getId());
-        if(!empty($contactsUnsubscribed))   {
-            $line .= "\n" . "Unsubscribed" . "\n";
-            foreach ($contactsUnsubscribed as $contact) {
-                $line .= implode(',', $contact) . "\n";
-                // if(isset($contact['stateName']))
-                //     $state = $contact['stateName'];
-                // else 
-                //     $state = 'Unknown';
-                // $line .= $contact['email'] . ', ' . $state . "\n";
+            $first = true;
+            foreach ($contact as $value) {
+                if($first) {
+                    $line .= '"' . $value . '"';
+                    $first = false;
+                } else {
+                    $line .= ', "' . $value . '"';
+                }
             }
+            $line .= "\n";
         }
         file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
         unset($line);
@@ -459,7 +493,8 @@ class ContactService implements ContactServiceInterface
         $outputFilePath = $status->getOutputFilePath();
         // var_dump($outputFilePath);
         // die();
-        $fileName = end(explode('/', $outputFilePath));
+        $outputFilePathExploded = explode('/', $outputFilePath);
+        $fileName = end($outputFilePathExploded);
         // var_dump($fileName);
         // die();
         if (file_exists($outputFilePath)) {

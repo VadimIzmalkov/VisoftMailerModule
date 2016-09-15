@@ -6,17 +6,17 @@ use Doctrine\ORM\EntityRepository;
 
 class ContactRepository extends EntityRepository
 {
-    public function search($searchBy)
-    {
-        $queryBuilder = $this->createQueryBuilder('contact');
-        $queryBuilder
-            ->select('contact')
-            ->where('contact.email LIKE :string1')
-            ->andWhere('contact.fullName LIKE :string2')
-            ->setParameter('string1', '%' . $searchBy . '%')
-            ->setParameter('string2', '%' . $searchBy . '%');
-        return  $qb->getQuery()->getResult();
-    }
+    // public function search($searchBy)
+    // {
+    //     $queryBuilder = $this->createQueryBuilder('contact');
+    //     $queryBuilder
+    //         ->select('contact')
+    //         ->where('contact.email LIKE :string1')
+    //         ->andWhere('contact.fullName LIKE :string2')
+    //         ->setParameter('string1', '%' . $searchBy . '%')
+    //         ->setParameter('string2', '%' . $searchBy . '%');
+    //     return  $qb->getQuery()->getResult();
+    // }
 
     public function findBySibscribedOnMailingLists($mailingListIds)
     {
