@@ -326,7 +326,7 @@ class ContactService implements ContactServiceInterface
 
     public function dump($status)
     {
-        $this->toFile($status);
+        $this->save2File($status);
         // var_dump($status);
         // die('123');
         
@@ -361,7 +361,7 @@ class ContactService implements ContactServiceInterface
         // unset($line);
     }
 
-    protected function toFile($status)
+    protected function save2File($status)
     {
         $database = $status->getDatabase();
         $contacts = $this->entityManager->getRepository('TinyCRM\Entity\Contact')->findArrayByDatabase($database->getId());

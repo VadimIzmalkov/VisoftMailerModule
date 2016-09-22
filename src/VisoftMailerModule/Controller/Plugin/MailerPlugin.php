@@ -185,7 +185,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         ];
         $results = array();
         $i = 0;
-         while($file->valid() && $i <= $checkLines){
+        while($file->valid() && $i <= $checkLines){
             $line = $file->fgets();
             foreach ($delimiters as $delimiter){
                 $regExp = '/['.$delimiter.']/';
