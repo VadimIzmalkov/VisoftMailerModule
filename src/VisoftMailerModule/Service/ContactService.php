@@ -33,7 +33,34 @@ class ContactService implements ContactServiceInterface
         $this->checkDir($this->moduleOptions->getContactEnterJsonDir());
 	}
 
-	public function enter($database, array $contactsArray)
+    public function uploadCsvFile2Db($uploadCsvFile, $database)
+    {
+        // move file to target dir
+        $targetDir = $this->moduleOptions->getContactUploadedCsvDir();
+        $uploadCsvFileArray = $uploadCsvFile->toArray();
+        $uploadElementName = key($uploadCsvFileArray);
+        $csvFileName = $uploadCsvFileArray[$uploadElementName]['name'];
+        $csvFileInfo = pathinfo($csvFileName);
+        $now = new \DateTime();
+        $receiver = new \Zend\File\Transfer\Adapter\Http();
+        $receiver->setDestination($targetDir)
+            ->setFilters([
+                new \Zend\Filter\File\Rename([
+                    "target" => $targetDir . '/uploaded_csv_' . $now->format('Y_m_d-H:i') . '_' . '.' . $csvFileInfo['extension'],
+                    "randomize" => true,
+                ]),
+            ]);
+        $receiver->receive($uploadElementName);
+        $newCsvFilePath = $receiver->getFileName($uploadElementName);
+
+        // transform CSV file to array
+        $contactsArray = $this->csvFile2Array($newCsvFilePath);
+
+        // save array to databse
+        $this->runProcessSave2Database($database, $contactsArray);
+    }
+
+	public function runProcessSave2Database($database, array $contactsArray)
 	{
         // convert array to json 
         $contactsTotal = count($contactsArray);
@@ -69,7 +96,7 @@ class ContactService implements ContactServiceInterface
         return $status;
 	}
 
-	public function persist($status)
+	public function save2Database($status)
 	{
        	// forming of header log message 
        	$reportFilePath = $status->getOutputFilePath();
@@ -79,7 +106,7 @@ class ContactService implements ContactServiceInterface
        	$message .= "Date: " . $this->getDateTimeWithMicroseconds()->format('d/m/Y') . "\n";
        	$message .= "------------------------------------------------------------------- \n";
        	$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Connected to worker. \n";
-       	$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Persisting started. \n";
+       	$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Saving started. \n";
        	$message .= "------------------------------------------------------------------- \n";
        	file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
 
@@ -100,51 +127,6 @@ class ContactService implements ContactServiceInterface
 
         // $mailingLists = $status->getMailingLists();
         $database = $status->getDatabase();
-
-        // TODO: move below to inherit class
-        // this data should be dependence
-        // $contactState = $this->entityManager->find('VisoftMailerModule\Entity\ContactState', $this->moduleOptions->getRecentlyAddedStateId()); // 2 - Not Confirmed
-
-        // // start to process every contact
-        // foreach ($contactsArray as $contactInfo) {
-        //     // previously contact not exist
-        //     $contactExists = false;
-            
-        //     // check if contact already exist by unique data
-        //     // unique data can be
-        //     // - e-mail
-        //     // - phone
-        //     // unique data sets in visoftmailermodule.global.php
-        //     // peristing allowed only if same field exists in contact's info - exmp.: $contactsInfo['email']
-        //     if(isset($contactInfo[$uniqueField])) {
-        //         // check contact in database
-        //         $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
-        //         if(!empty($contact)) {
-        //             $contactExists = true;
-        //             array_push($emailsProcessed, $contactInfo[$uniqueField]);
-        //         }
-                
-        //         // convert email to lowercase
-        //         $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
-        //         $emailContactLower = strtolower($contactInfo[$uniqueField]);
-
-        //         // check contact in email list that already was persisted
-        //         $contactExists = in_array($emailContactLower, $emailsProcessedLower); 
-                
-        //         // update flag
-        //         // $contactNotExist = empty($contact) && !$emailProcessedFlag;
-                
-        //         // contact already in database
-        //         if($contactExists) {
-        //             $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
-        //             file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
-        //             $countContactExist++;
-        //             continue;
-        //         }
-        //     } 
-            
-        //     // create new contact if one has not been find before
-        //     if(!$contactExists) {
 
         // start to process every contact
         foreach ($contactsArray as $contactArray) {
@@ -184,25 +166,11 @@ class ContactService implements ContactServiceInterface
                 continue;
             }
 
-            $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
-            $contact = new $contactEntityInfo->name;
-            $this->setContact($contact, $database, $contactArray);
-                // $contact->setState($contactState);
-                // $contact->addSubscribedOnMailingLists($mailingLists);
-                
-                // // set info save all information from CSV
-                // // name of the columns creates in VisoftMailerModule\Controller\Plugin\MailerPlugin, method - importCsvFile()
-                // // Full Name -> full-name etc.
-                // $contact->setInfo($contactInfo);
-                
-                // // for cases when users === contacts
-                // if($contact instanceof UserInterface) {
-                //     $contact->setRole($subscriberRole);
-                // }
-                
+            // create new entity and save to Database
+            $contact = $this->createContactEntity($contactArray, $database); 
             $this->entityManager->persist($contact);
+            
             $countContactAdded++;
-
             $countContactProcessed++;
 
             if (!($countContactProcessed % 2000)) { # do flushing once per 2000 emails
@@ -211,76 +179,9 @@ class ContactService implements ContactServiceInterface
                 $status->setNumContactsExist($countContactExist);
                 $this->entityManager->persist($status);
                 $this->entityManager->flush();
-                // unset($emailsProcessed);
-                // $emailsProcessed = [];
             }
         }
-        // foreach ($contactsArray as $contactInfo) {
-        //     // previously contact not exist
-        //     $contactNotExist = true;
-            
-        //     // check if contact already exist by unique data
-        //     // unique data can be
-        //     // - e-mail
-        //     // - phone
-        //     // unique data sets in visoftmailermodule.global.php
-        //     // peristing allowed only if same field exists in contact's info - exmp.: $contactsInfo['email']
-        //     if(isset($contactInfo[$uniqueField])) {
-        //         $contact = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findOneBy([$uniqueField => $contactInfo[$uniqueField]]);
-                
-        //         // check if contact already in list for persisting
-        //         // convert email to lowercase
-        //         $emailsProcessedLower = array_map('strtolower', $emailsProcessed);
-        //         $emailContactLower = strtolower($contactInfo[$uniqueField]);
-        //         $emailProcessedFlag = in_array($emailContactLower, $emailsProcessedLower); 
-                
-        //         // update flag
-        //         $contactNotExist = empty($contact) && !$emailProcessedFlag;
-                
-        //         // contact already in database
-        //         if(!$contactNotExist) {
-        //             $message = "Warning: " . $contactInfo[$uniqueField] . " alredy exists and cannot be added \n";
-        //             array_push($emailsProcessed, $contactInfo[$uniqueField]);
-        //             file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
-        //             $countContactExist++;
-        //         }
-        //     } 
-            
-        //     // create new contact if one has not been find before
-        //     if($contactNotExist) {
-        //         $contactEntityInfo = $this->entityManager->getClassMetadata('VisoftMailerModule\Entity\ContactInterface');
-        //         $contact = new $contactEntityInfo->name;
 
-        //         $this->setContact($contact, $database, $contactInfo);
-        //         // $contact->setState($contactState);
-        //         // $contact->addSubscribedOnMailingLists($mailingLists);
-                
-        //         // // set info save all information from CSV
-        //         // // name of the columns creates in VisoftMailerModule\Controller\Plugin\MailerPlugin, method - importCsvFile()
-        //         // // Full Name -> full-name etc.
-        //         // $contact->setInfo($contactInfo);
-                
-        //         // // for cases when users === contacts
-        //         // if($contact instanceof UserInterface) {
-        //         //     $contact->setRole($subscriberRole);
-        //         // }
-                
-        //         $this->entityManager->persist($contact);
-        //         $countContactAdded++;
-        //     } 
-            
-        //     $countContactProcessed++;
-
-        //     if (!($countContactProcessed % 2000)) { # do flushing once per 2000 emails
-        //         $status->setNumContactsProcessed($countContactProcessed);
-        //         $status->setNumContactsAdded($countContactAdded);
-        //         $status->setNumContactsExist($countContactExist);
-        //         $this->entityManager->persist($status);
-        //         $this->entityManager->flush();
-        //         unset($emailsProcessed);
-        //         $emailsProcessed = [];
-        //     }
-        // }
         $status->setNumContactsProcessed($countContactProcessed);
         $status->setNumContactsAdded($countContactAdded);
         $status->setNumContactsExist($countContactExist);
@@ -293,17 +194,21 @@ class ContactService implements ContactServiceInterface
 		$message .= "- contacts added: " . $countContactAdded . " \n";
 		$message .= "- contacts exist: " . $countContactExist . " \n";
 		$message .= "------------------------------------------------------------------- \n";
-		$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Persisting successfully completed. \n";
+		$message .= "[" . $this->getDateTimeWithMicroseconds()->format('d/m/Y H:i:s.u') . "] Saving successfully completed. \n";
    		file_put_contents($reportFilePath, $message, FILE_APPEND | LOCK_EX);
 	}
 
-    public function export(Entity\DatabaseInterface $database)
+    // argument $parameter can be entity of Database or string parameter if custom export needed
+    public function runProcessExport($parameter)
     {
         $now = new \DateTime();
         $authenticatedUser = $this->authenticationService->getIdentity();
         $status = new Entity\StatusDatabaseExport($authenticatedUser);
         $status->setState(0);
-        $status->setDatabase($database);
+        if($parameter instanceof \TinyCRM\Entity\Database)
+            $status->setDatabase($parameter);
+        else
+            $status->setExtraParameter($parameter);
         $csvFileName = 'contacts_export_' . $now->format('d-m-Y_H-i-s') . '.csv';
         $csvFilePath = $this->moduleOptions->getContactExportedCsvDir() . '/' . $csvFileName;
         $status->setOutputFilePath($csvFilePath);
@@ -324,44 +229,44 @@ class ContactService implements ContactServiceInterface
         return $status;
     }
 
-    public function dump($status)
-    {
-        $this->save2File($status);
-        // var_dump($status);
-        // die('123');
+    // public function dump($status)
+    // {
+    //     $this->save2File($status);
+    //     // var_dump($status);
+    //     // die('123');
         
-        // var_dump(count($contacts));
-        // die('123');
-        // $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getDatabase()->getId());
-        // $csvFilePath = $status->getOutputFilePath();
-        // $line = null;
-        // foreach ($contactsSubscribed as $contact) {
-        //     // find header
-        //     if(is_null($line)) {
-        //         // Fields and header determinates in findBySibscribedOnMailingLists function. 
-        //         // If needs to change selection of exported data please refer to findBySibscribedOnMailingLists function
-        //         $line = implode(",", array_keys($contact)) . "\n";; // header
-        //     }
-        //     $line .= implode(',', $contact) . "\n";
-        //     // $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
-        // }
-        // $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($status->getDatabase()->getId());
-        // if(!empty($contactsUnsubscribed))   {
-        //     $line .= "\n" . "Unsubscribed" . "\n";
-        //     foreach ($contactsUnsubscribed as $contact) {
-        //         $line .= implode(',', $contact) . "\n";
-        //         // if(isset($contact['stateName']))
-        //         //     $state = $contact['stateName'];
-        //         // else 
-        //         //     $state = 'Unknown';
-        //         // $line .= $contact['email'] . ', ' . $state . "\n";
-        //     }
-        // }
-        // file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
-        // unset($line);
-    }
+    //     // var_dump(count($contacts));
+    //     // die('123');
+    //     // $contactsSubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findBySibscribedOnMailingLists($status->getDatabase()->getId());
+    //     // $csvFilePath = $status->getOutputFilePath();
+    //     // $line = null;
+    //     // foreach ($contactsSubscribed as $contact) {
+    //     //     // find header
+    //     //     if(is_null($line)) {
+    //     //         // Fields and header determinates in findBySibscribedOnMailingLists function. 
+    //     //         // If needs to change selection of exported data please refer to findBySibscribedOnMailingLists function
+    //     //         $line = implode(",", array_keys($contact)) . "\n";; // header
+    //     //     }
+    //     //     $line .= implode(',', $contact) . "\n";
+    //     //     // $line .= $contact['email'] . ', '. $contact['stateName'] . "\n";
+    //     // }
+    //     // $contactsUnsubscribed = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findByUnibscribedFromMailingLists($status->getDatabase()->getId());
+    //     // if(!empty($contactsUnsubscribed))   {
+    //     //     $line .= "\n" . "Unsubscribed" . "\n";
+    //     //     foreach ($contactsUnsubscribed as $contact) {
+    //     //         $line .= implode(',', $contact) . "\n";
+    //     //         // if(isset($contact['stateName']))
+    //     //         //     $state = $contact['stateName'];
+    //     //         // else 
+    //     //         //     $state = 'Unknown';
+    //     //         // $line .= $contact['email'] . ', ' . $state . "\n";
+    //     //     }
+    //     // }
+    //     // file_put_contents($csvFilePath, $line, FILE_APPEND | LOCK_EX);
+    //     // unset($line);
+    // }
 
-    protected function save2File($status)
+    public function createCsvFile($status)
     {
         $database = $status->getDatabase();
         $contacts = $this->entityManager->getRepository('TinyCRM\Entity\Contact')->findArrayByDatabase($database->getId());
@@ -474,10 +379,15 @@ class ContactService implements ContactServiceInterface
         }        
     }
 
-    protected function setContact(&$contact, $database, $contactInfo)
+    protected function createContactEntity($contactArray, $database)
     {
 
     }
+
+    // protected function setContact(&$contact, $database, $contactInfo)
+    // {
+
+    // }
 
     protected function getDateTimeWithMicroseconds()
     {
@@ -486,10 +396,10 @@ class ContactService implements ContactServiceInterface
 		return new \DateTime(date('Y-m-d H:i:s.' . $micro, $time));
     }
 
-    public function downloadExportCsv($mailingListId)
+    public function downloadExportCsv($statusId)
     {
-        $mailingList = $this->entityManager->getRepository('VisoftMailerModule\Entity\DatabaseInterface')->findOneBy(['id' => $mailingListId]);
-        $status = $this->entityManager->getRepository('VisoftMailerModule\Entity\StatusDatabaseExport')->findOneBy(['database' => $mailingList], ['createdAt' => 'DESC']);
+        // $mailingList = $this->entityManager->getRepository('VisoftMailerModule\Entity\DatabaseInterface')->findOneBy(['id' => $mailingListId]);
+        $status = $this->entityManager->find('VisoftMailerModule\Entity\StatusDatabaseExport', $statusId); //->findOneBy(['database' => $mailingList], ['createdAt' => 'DESC']);
         $outputFilePath = $status->getOutputFilePath();
         // var_dump($outputFilePath);
         // die();
@@ -512,5 +422,83 @@ class ContactService implements ContactServiceInterface
         } else {
             echo 'The file $fileName does not exist';
         }
+    }
+
+    protected function csvFile2Array($csvFilePath)
+    {
+        // detect delimiter for csv
+        $delimiter = self::detectCsvFileDelimiter($csvFilePath);
+
+        // convert file to array 
+        $contactsArray = file($csvFilePath);
+
+        // get titles of columns and transform
+        $columnNames = str_getcsv($contactsArray[0], $delimiter);
+        array_walk($columnNames, function(&$item) {
+            $item = str_replace(" ", "-", $item);
+            $item = strtolower($item); 
+        });
+
+        foreach ($contactsArray as $key => $contact) {
+            // get CSV line by line
+            $contact = str_getcsv($contact, $delimiter);
+            
+            // change keys in array to column names
+            $contact = array_combine($columnNames, $contact);
+
+            // detect Windows-1251 ecoding and change to UTF-8
+            array_walk($contact, function(&$item) {
+                $encoding = mb_detect_encoding($item, array('UTF-8', 'Windows-1251', 'KOI8-R'));
+                // if(mb_check_encoding($item, 'CP1251')){
+                //     $item = iconv('CP1251', 'UTF-8', $item);
+                // }
+                if($encoding !== 'UTF-8') {
+                    $item = iconv('CP1251', 'UTF-8', $item);
+                }
+                $item = \VisoftBaseModule\Service\ForceUTF8\Encoding::toUTF8($item);
+                // if(mb_check_encoding($item, 'CP1251')){
+                //     $item = iconv('CP1251', 'UTF-8', $item);
+                // }
+            });
+
+            // rewrite current element to new one
+            $contactsArray[$key] = $contact;
+        }
+
+        // remove column header
+        array_shift($contactsArray);
+
+        return $contactsArray;
+    }
+
+    public static function detectCsvFileDelimiter($csvFilePath, $checkLines = 5)
+    {
+        $file = new \SplFileObject($csvFilePath);
+        $delimiters = [
+            ',', 
+            '\t', 
+            ';', 
+            '|', 
+            ':'
+        ];
+        $results = array();
+        $i = 0;
+        while($file->valid() && $i <= $checkLines){
+            $line = $file->fgets();
+            foreach ($delimiters as $delimiter){
+                $regExp = '/['.$delimiter.']/';
+                $fields = preg_split($regExp, $line);
+                if(count($fields) > 1){
+                    if(!empty($results[$delimiter])){
+                        $results[$delimiter]++;
+                    } else {
+                        $results[$delimiter] = 1;
+                    }   
+                }
+            }
+           $i++;
+        }
+        $results = array_keys($results, max($results));
+        return $results[0];
     }
 }

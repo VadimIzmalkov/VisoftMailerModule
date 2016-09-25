@@ -38,7 +38,7 @@ class ContactController extends BaseController
         $process = $this->processingService->createBackgroundProcess("contactsEnter", $status->getId());
         $process->getWorker()->addFunction('contactsEnter', function (\GearmanJob $job) {
             $status = $this->contactService->processStarted($job->workload());
-            $this->contactService->persist($status);
+            $this->contactService->save2Database($status);
             $this->contactService->processCompleted($status);
             return true;
         });
@@ -51,7 +51,7 @@ class ContactController extends BaseController
         $process = $this->processingService->createBackgroundProcess("contactsExport", $status->getId());
         $process->getWorker()->addFunction('contactsExport', function (\GearmanJob $job) {
             $status = $this->contactService->processStarted($job->workload());
-            $this->contactService->dump($status);
+            $this->contactService->createCsvFile($status);
             $this->contactService->processCompleted($status);
             return true;
         });
