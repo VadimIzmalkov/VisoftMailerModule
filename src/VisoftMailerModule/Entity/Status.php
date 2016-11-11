@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM,
 use VisoftBaseModule\Entity\UserInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="VisoftMailerModule\Entity\Repository\StatusRepository")
  * @ORM\Table(name="visoft_mailer_statuses")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="discr", type="string")
