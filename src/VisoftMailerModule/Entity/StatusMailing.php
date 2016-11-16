@@ -58,23 +58,17 @@ class StatusMailing extends Status
     	parent::__construct();
     }
 
+    public function getDatabase() { return $this->database; }
+    public function setDatabase($database) { $this->database = $database; }
+
     public function getEmailTemplate() { return $this->emailTemplate; }
-    public function setEmailTemplate($emailTemplate) {
-        $this->emailTemplate = $emailTemplate;
-        return $this;
-    }
+    public function setEmailTemplate($emailTemplate) { $this->emailTemplate = $emailTemplate; }
 
     public function getParametersJson() { return $this->parametersJson; }
-    public function setParametersJson($parametersJson) {
-        $this->parametersJson = $parametersJson;
-        return $this;
-    }
+    public function setParametersJson($parametersJson) { $this->parametersJson = $parametersJson; }
 
     public function getSubject() { return $this->subject; }
-    public function setSubject($subject) {
-    	$this->subject = $subject;
-    	return $this;
-    }
+    public function setSubject($subject) { $this->subject = $subject; }
 
     public function getMailingType() { return $this->mailingType; }
     public function setMailingType($mailingType) { $this->mailingType = $mailingType; }
