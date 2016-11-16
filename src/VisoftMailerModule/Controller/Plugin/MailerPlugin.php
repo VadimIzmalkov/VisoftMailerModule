@@ -18,7 +18,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         $this->contactService = $contactService;
 	}
 
-	public function send(array $contactsArray, $emailTemplate, $parametersArray, $subject, $mailingType, $sendingType)
+	public function send(array $contactsArray, $emailTemplate, $parametersArray, $subject, $mailingType, $sendingType, $database = null)
 	{
 		$now = new \DateTime();
 
@@ -46,6 +46,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         $status->setParametersJson(json_encode($parametersArray));        
         $status->setOutputFilePath($reportFilePath);
         $status->setMailingType($mailingType);
+        $status->setDatabase($database);
         $status->setSubject($subject);
         $status->setState(0);
         $this->entityManager->persist($status);
