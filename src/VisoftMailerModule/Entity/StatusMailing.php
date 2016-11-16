@@ -46,6 +46,12 @@ class StatusMailing extends Status
      */
     protected $numUnsubscribe;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="VisoftMailerModule\Entity\DatabaseInterface")
+     * @ORM\JoinColumn(name="database_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
+     */
+    protected $database;
+
     public function __construct() {
         $this->numClicks = 0;
         $this->numUnsubscribe = 0;

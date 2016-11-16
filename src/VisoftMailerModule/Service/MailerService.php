@@ -104,7 +104,7 @@ class MailerService implements MailerServiceInterface
 	}
 
     // TODO: move this logic to fryday module 
-    public function sendEmail($status)
+    public function sendEmail($status, $contact)
     {
 
     }
