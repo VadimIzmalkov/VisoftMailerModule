@@ -205,7 +205,7 @@ class ContactService implements ContactServiceInterface
         $authenticatedUser = $this->authenticationService->getIdentity();
         $status = new Entity\StatusDatabaseExport($authenticatedUser);
         $status->setState(0);
-        if($parameter instanceof \TinyCRM\Entity\Database)
+        if($parameter instanceof \VisoftMailerModule\Entity\DatabaseInterface)
             $status->setDatabase($parameter);
         else
             $status->setExtraParameter($parameter);
@@ -269,7 +269,7 @@ class ContactService implements ContactServiceInterface
     public function createCsvFile($status)
     {
         $database = $status->getDatabase();
-        $contacts = $this->entityManager->getRepository('TinyCRM\Entity\Contact')->findArrayByDatabase($database->getId());
+        $contacts = $this->entityManager->getRepository('VisoftMailerModule\Entity\ContactInterface')->findArrayByDatabase($database->getId());
         $csvFilePath = $status->getOutputFilePath();
         $line = null;
         foreach ($contacts as $contact) {
