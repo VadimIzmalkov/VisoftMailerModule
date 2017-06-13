@@ -129,7 +129,7 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
 
         // convert file to array 
         $contactsArray = file($uploadedCsvFilePath);
-
+        
         // get titles of columns and transform
         $columnNames = str_getcsv($contactsArray[0], $delimiter);
         array_walk($columnNames, function(&$item) {
@@ -167,11 +167,9 @@ class MailerPlugin extends \Zend\Mvc\Controller\Plugin\AbstractPlugin
         array_shift($contactsArray);
 
         // debug array
-        // var_dump($contactsArray);
-        // die('11122');
 
         // save contacts to database
-        $this->contactService->enter($database, $contactsArray);
+        $this->contactService->runProcessSave2Database($database, $contactsArray);
     }
 
     public static function detectCsvFileDelimiter($csvFilePath, $checkLines = 5)
