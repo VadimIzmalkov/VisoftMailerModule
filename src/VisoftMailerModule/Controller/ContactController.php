@@ -10,7 +10,8 @@ use Doctrine\ORM\EntityManager;
 use VisoftBaseModule\Controller\BaseController,
     VisoftBaseModule\Service\ProcessingService,
     VisoftMailerModule\Options\ModuleOptions,
-    VisoftMailerModule\Service\ContactServiceInterface;
+    Core\Crm\Service\ContactServiceInterface;
+    // VisoftMailerModule\Service\ContactServiceInterface;
 
 class ContactController extends BaseController
 {

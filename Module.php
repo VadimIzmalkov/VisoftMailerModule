@@ -40,13 +40,14 @@ class Module
                     $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
                     return new BaseService\ProcessingService($entityManager);
                 },
-                'VisoftMailerModule\Service\ContactService' => function($serviceLocator) {
-                    $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
-                    $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
-                    $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
-                    $userService = $serviceLocator->get('VisoftBaseModule\Service\UserService');
-                    return new MailerService\ContactService($entityManager, $moduleOptions, $authenticationService, $userService);
-                },
+                'VisoftMailerModule\Service\ContactService' => \Core\Crm\Service\ContactServiceFactory::class,
+                // 'VisoftMailerModule\Service\ContactService' => function($serviceLocator) {
+                //     $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
+                //     $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
+                //     $entityManager = $serviceLocator->get('Doctrine\ORM\EntityManager');
+                //     $userService = $serviceLocator->get('VisoftBaseModule\Service\UserService');
+                //     return new MailerService\ContactService($entityManager, $moduleOptions, $authenticationService, $userService);
+                // },
                 'VisoftMailerModule\Service\MailerService' => function($serviceLocator) {
                     $moduleOptions = $serviceLocator->get('VisoftMailerModule\Options\ModuleOptions');
                     $authenticationService = $serviceLocator->get('Zend\Authentication\AuthenticationService');
